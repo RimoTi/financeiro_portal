@@ -11,7 +11,7 @@ export interface LoginCredentials {
 export const authService = {
   async logar(credentials: LoginCredentials): Promise<Usuario | void> {
      try {
-      const { data } = await api.post<Usuario>("/Auth/loginUser", credentials);
+      const { data } = await api.post<Usuario>("/Auth/Logar", credentials);
         return data; // Retorna os dados da resposta para o componente
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

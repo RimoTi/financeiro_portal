@@ -19,7 +19,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     else localStorage.removeItem("usuario");
   };
 
-  const logout: AuthContextType["logout"] = () => { setUsuarioState(undefined); localStorage.removeItem("usuario"); }
+  const logout: AuthContextType["logout"] = () => { 
+    setUsuarioState(undefined); 
+    localStorage.removeItem("usuario");
+    window.location.href = '/';
+   }
 
   return (
     <AuthContext.Provider value={{ usuario, setUsuario, logout }}>
