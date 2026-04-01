@@ -6,7 +6,7 @@ const PrivateRoute = lazy(() => import("./PrivateRoute").then(m => ({ default: m
 const Login = lazy(() => import("@features/auth/pages/Login").then(m => ({ default: m.Login })));
 const Home = lazy(() => import("../pages/home").then(m => ({ default: m.Home })));
 const ImportarCSV = lazy(() => import("@features/consciliacao/pages/importCsv").then(m => ({ default: m.ImportCsv })));
-//const ListaConciliacao = lazy(() => import("@features/consciliacao/pages/lista").then(m => ({ default: m.ListaConciliacao })));
+const ConciliacaoSemVinculo = lazy(() => import("@features/consciliacao/pages/semVinculo").then(m => ({ default: m.ConciliacaoSemVinculo })));
 //const RelatorioConciliacao = lazy(() => import("@features/consciliacao/pages/relatorio").then(m => ({ default: m.RelatorioConciliacao })));
 
 const withSuspense = (element: JSX.Element) => (
@@ -27,7 +27,7 @@ export const AppRoutes = createBrowserRouter([
           { path: "/home", element: withSuspense(<Home />) },
           //rotas de conciliação
           { path: "/consciliacao/importar", element: withSuspense(<ImportarCSV />) },
-          //{ path: "/consciliacao/lista", element: withSuspense(<ListaConciliacao />) },
+          { path: "/consciliacao/semVinculo", element: withSuspense(<ConciliacaoSemVinculo />) },
           //{ path: "/consciliacao/relatorio", element: withSuspense(<RelatorioConciliacao />) },
 
         ],

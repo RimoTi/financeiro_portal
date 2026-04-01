@@ -1,4 +1,8 @@
 import React from "react";
+import { getTransacoesSemVinculo } from "../../features/consciliacao/consciliacaoService";
+import { Conciliacao } from "../../features/consciliacao/types";
+import { useLocation } from "react-router-dom";
+
 import {
   CSidebar,
   CSidebarNav,
@@ -14,6 +18,21 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) => {
+  const [conciliacoes, setConciliacoes] = React.useState<Conciliacao[]>([]);
+  const location = useLocation();
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getTransacoesSemVinculo();
+        setConciliacoes(data);
+      } catch (error) {
+        console.error("Erro ao buscar transações sem vínculo:", error);
+      }
+    };
+    fetchData();
+  }, [location.pathname]);
+
+
   return (
     <CSidebar
       visible={visible}
@@ -43,9 +62,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
           </CNavItem>
 
           <CNavItem>
-            <Link to="/consciliacao/lista" className="nav-link">
-              📋 Lista
-            </Link>
+            <div style={styles.navItem}>
+              <Link to="/consciliacao/semVinculo" className="nav-link">
+                📋 Pendentes Vínculo
+              </Link>
+
+              {conciliacoes.length > 0 && (
+                <span style={styles.badge}>
+                  {conciliacoes.length}
+                </span>
+              )}
+            </div>
           </CNavItem>
 
           <CNavItem>
@@ -59,4 +86,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
       </CSidebarNav>
     </CSidebar>
   );
+};
+
+
+const styles = {
+  navItem: {
+    position: "relative" as const,
+    display: "flex",
+    alignItems: "center",
+  },
+
+  badge: {
+    position: "absolute" as const,
+    top: "2px",
+    right: "15px",
+    backgroundColor: "#ef4444",
+    color: "#fff",
+    borderRadius: "50%",
+    width: "18px",
+    height: "18px",
+    fontSize: "11px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+  }
 };

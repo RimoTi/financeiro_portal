@@ -1,3 +1,4 @@
+
 // App.tsx
 import React from "react";
 import { ToastContainer } from 'react-toastify'; // Importa o container

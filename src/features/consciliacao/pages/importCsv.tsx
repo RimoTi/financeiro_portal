@@ -1,12 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Papa, { ParseResult } from "papaparse";
-import { Coluna, consciliacaoService, ValidarCsvRequest } from "../consciliacaoService";
+import {  validarCsv, getAllSisPag, mapCsvToDto, importarCsv } from "../consciliacaoService";
+import { CsvSisPag, Coluna, validarCsv as validarCsvType } from "../types";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 type CsvRow = Record<string, string>;
 
 export const ImportCsv: React.FC = () => {
   const [data, setData] = useState<CsvRow[]>([]);
   const [fileName, setFileName] = useState("");
+  const [sistPagId, setSistPagId] = useState(1); // Exemplo fixo, ajustar conforme necessário
+  const [sistemasPagamento, setSistemasPagamento] = useState<CsvSisPag[]>([]);
+const navigate = useNavigate();
+useEffect(() => {
+  const carregar = async () => {
+    try {
+      const response = await getAllSisPag();
+      //console.log("Sistemas de Pagamento:", response);
+      setSistemasPagamento(response);
+    } catch (error) {
+      console.error("Erro ao buscar sistemas de pagamento:", error);
+    }
+  };
+  carregar(); 
+}, []);
 
   const handleFile = (file: File) => {
     setFileName(file.name);
@@ -34,40 +52,58 @@ export const ImportCsv: React.FC = () => {
   const handleUpload = async () => {
     try {
 
-
       const colunas: Coluna[] = Object.keys(data[0])
         .sort((a, b) => Number(a.replace("_", "")) - Number(b.replace("_", "")))
         .map((key, index) => ({
           nomeColunaCsv: key,
           posicaoColuna: index + 1,
         }));
-      const requestData: ValidarCsvRequest = {
-        sistPagId: 1, // Exemplo fixo, ajustar conforme necessário
+      const requestData: validarCsvType = {
+        sistPagId: sistPagId, 
         colunas,
       };
 
       try {
-        const response = await consciliacaoService.importarCSV(requestData);
-        alert(response);
+        const response = await validarCsv(requestData);
+        toast.success(response);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         const msg = error.response?.data?.message;
-
-        console.error(msg);
+        toast.error(msg);
+        return; // interrompe o processo se houver erro
         //console.log(msg); // ou toast
       }
-
-
-      alert("Importação realizada com sucesso!");
+      const novoArray = data.slice(1);
+      const dtoArray = mapCsvToDto(novoArray, sistPagId);
+      //console.log("Dados para importação:", dtoArray);
+      try {
+        const response = await importarCsv(dtoArray);
+        toast.success(response);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        const msg = error.response?.data?.message;
+        toast.error(msg);
+        return; // interrompe o processo se houver erro
+        //console.log(msg); // ou toast
+      }
+      navigate("/home"); // Redireciona para a página de lista após a importação
     } catch (error) {
       console.error(error);
-      alert("Erro ao enviar dados");
+      toast.error("Erro ao enviar dados");
     }
   };
 
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
+        <h5>Sistema de Pagamento</h5>
+        <select style={styles.select} name="" id="" onChange={(e) => setSistPagId(Number(e.target.value))}>
+          {sistemasPagamento.map((sis) => (
+            <option key={sis.id} value={sis.id}>
+             {sis.sistPag}
+            </option>
+          ))}
+        </select>
         <h2 style={styles.title}>Importar CSV</h2>
 
         <div
@@ -193,5 +229,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "8px",
     borderBottom: "1px solid #e2e8f0",
     fontSize: "14px",
+  },
+    select: {
+    padding: "10px 12px",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    fontSize: "14px",
+    outline: "none",
+    backgroundColor: "#fff",
+    cursor: "pointer",
+    minWidth: "200px",
+    appearance: "none" as const,
   },
 };
