@@ -112,7 +112,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
           </CNavItem>
 
         </CNavGroup>
-
+        <CNavItem>
+            <Link to="/baixar/ecommerce" className="nav-link">
+              📊 Baixar Titulos E-Commerce
+            </Link>
+          </CNavItem>
       </CSidebarNav>
     </CSidebar>
   );
