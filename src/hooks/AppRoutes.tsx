@@ -7,7 +7,7 @@ const Login = lazy(() => import("@features/auth/pages/Login").then(m => ({ defau
 const Home = lazy(() => import("../pages/home").then(m => ({ default: m.Home })));
 const ImportarCSV = lazy(() => import("@features/consciliacao/pages/importCsv").then(m => ({ default: m.ImportCsv })));
 const ConciliacaoSemVinculo = lazy(() => import("@features/consciliacao/pages/semVinculo").then(m => ({ default: m.ConciliacaoSemVinculo })));
-//const RelatorioConciliacao = lazy(() => import("@features/consciliacao/pages/relatorio").then(m => ({ default: m.RelatorioConciliacao })));
+const PendentesBaixa = lazy(() => import("@features/consciliacao/pages/pendentesBaixa").then(m => ({ default: m.PendentesBaixa })));
 
 const withSuspense = (element: JSX.Element) => (
   <Suspense fallback={<div>Carregando...</div>}>{element}</Suspense>
@@ -28,7 +28,7 @@ export const AppRoutes = createBrowserRouter([
           //rotas de conciliação
           { path: "/consciliacao/importar", element: withSuspense(<ImportarCSV />) },
           { path: "/consciliacao/semVinculo", element: withSuspense(<ConciliacaoSemVinculo />) },
-          //{ path: "/consciliacao/relatorio", element: withSuspense(<RelatorioConciliacao />) },
+          { path: "/consciliacao/pendentesBaixa", element: withSuspense(<PendentesBaixa />) },
 
         ],
       },

@@ -66,7 +66,7 @@ interface VincTitNfs {
     nfsSaida: NotaFiscal | null;
 }
 
-interface Transacao {
+export interface Transacao {
   id: number;
   bandeira: string;
   parcela: number;
@@ -76,4 +76,9 @@ interface Transacao {
   dataTransacao: string;
   numAutorizacao: string;
   vincTitNfs: VincTitNfs | null;
+}
+
+export type ApiResquestGetNota = {
+    numNf: number;
+    chaveAcesso: string;
 }

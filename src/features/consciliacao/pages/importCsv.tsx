@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Papa, { ParseResult } from "papaparse";
-import {  validarCsv, getAllSisPag, mapCsvToDto, importarCsv } from "../consciliacaoService";
+import { validarCsv, getAllSisPag, mapCsvToDto, importarCsv } from "../consciliacaoService";
 import { CsvSisPag, Coluna, validarCsv as validarCsvType } from "../types";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { Spinner } from "@components/spinner";
 
 type CsvRow = Record<string, string>;
 
@@ -12,30 +13,43 @@ export const ImportCsv: React.FC = () => {
   const [fileName, setFileName] = useState("");
   const [sistPagId, setSistPagId] = useState(1); // Exemplo fixo, ajustar conforme necessário
   const [sistemasPagamento, setSistemasPagamento] = useState<CsvSisPag[]>([]);
-const navigate = useNavigate();
-useEffect(() => {
-  const carregar = async () => {
-    try {
-      const response = await getAllSisPag();
-      //console.log("Sistemas de Pagamento:", response);
-      setSistemasPagamento(response);
-    } catch (error) {
-      console.error("Erro ao buscar sistemas de pagamento:", error);
-    }
-  };
-  carregar(); 
-}, []);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const carregar = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllSisPag();
+        //console.log("Sistemas de Pagamento:", response);
+        setSistemasPagamento(response);
+      } catch (error) {
+        console.error("Erro ao buscar sistemas de pagamento:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    carregar();
+  }, []);
 
   const handleFile = (file: File) => {
-    setFileName(file.name);
+    try {
+      setLoading(true);
+      setFileName(file.name);
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results: ParseResult<CsvRow>) => {
-        setData(results.data);
-      },
-    });
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results: ParseResult<CsvRow>) => {
+          setData(results.data);
+        },
+      });
+    } catch (error) {
+      console.error("Erro ao ler o arquivo:", error);
+      toast.error("Erro ao ler o arquivo");
+    } finally {
+      setLoading(false);
+    };
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -59,32 +73,36 @@ useEffect(() => {
           posicaoColuna: index + 1,
         }));
       const requestData: validarCsvType = {
-        sistPagId: sistPagId, 
+        sistPagId: sistPagId,
         colunas,
       };
 
       try {
+        setLoading(true);
         const response = await validarCsv(requestData);
         toast.success(response);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        const msg = error.response?.data?.message;
-        toast.error(msg);
+      } catch (error: string | any) {
+        toast.error(error);
         return; // interrompe o processo se houver erro
         //console.log(msg); // ou toast
+      } finally {
+        setLoading(false);
       }
       const novoArray = data.slice(1);
       const dtoArray = mapCsvToDto(novoArray, sistPagId);
-      //console.log("Dados para importação:", dtoArray);
+      console.log("Dados para importação:", dtoArray);
       try {
+        setLoading(true);
         const response = await importarCsv(dtoArray);
         toast.success(response);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        const msg = error.response?.data?.message;
-        toast.error(msg);
+      } catch (error: string | any) {
+        toast.error(error);
         return; // interrompe o processo se houver erro
         //console.log(msg); // ou toast
+      } finally {
+        setLoading(false);
       }
       navigate("/home"); // Redireciona para a página de lista após a importação
     } catch (error) {
@@ -93,6 +111,10 @@ useEffect(() => {
     }
   };
 
+  if (loading) {
+    if (loading) return <Spinner text="Carregando dados..." fullScreen />;
+  }
+
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
@@ -100,7 +122,7 @@ useEffect(() => {
         <select style={styles.select} name="" id="" onChange={(e) => setSistPagId(Number(e.target.value))}>
           {sistemasPagamento.map((sis) => (
             <option key={sis.id} value={sis.id}>
-             {sis.sistPag}
+              {sis.sistPag}
             </option>
           ))}
         </select>
@@ -230,7 +252,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderBottom: "1px solid #e2e8f0",
     fontSize: "14px",
   },
-    select: {
+  select: {
     padding: "10px 12px",
     border: "1px solid #e2e8f0",
     borderRadius: "8px",
@@ -241,4 +263,5 @@ const styles: { [key: string]: React.CSSProperties } = {
     minWidth: "200px",
     appearance: "none" as const,
   },
+
 };

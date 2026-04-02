@@ -15,10 +15,22 @@ export const Layout: React.FC = () => {
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       {/* Sidebar controlada por props */}
-      <Sidebar
-        visible={sidebarVisible}
-        onVisibleChange={(val) => setSidebarVisible(val)}
-      />
+
+<div
+  style={{
+    width: sidebarVisible ? "350px" : "0px",
+    transition: "width 0.3s",
+    overflow: "hidden",
+    height: sidebarVisible ? "100vh" : "0px",
+  }}
+>
+  <Sidebar 
+    visible={sidebarVisible}
+    onVisibleChange={(val) => setSidebarVisible(val)}
+  />
+</div>
+
+
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
         <Header onToggleSidebar={() => setSidebarVisible(!sidebarVisible)} />

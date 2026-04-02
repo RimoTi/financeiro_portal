@@ -2,26 +2,64 @@ import React, { useEffect, useState } from "react";
 import { Conciliacao } from "@features/consciliacao/types";
 import { getTransacoesSemVinculo } from "@features/consciliacao/consciliacaoService";
 import { ModalGetNota } from "./components/modalGetNota";
+import { Spinner } from "@components/spinner";
 
 export const ConciliacaoSemVinculo = () => {
   const [data, setData] = useState<Conciliacao[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Conciliacao | null>(null);
+  const [dataFiltrada, setDataFiltrada] = useState<Conciliacao[]>([]);
+  const [loading, setLoading] = useState(false);
+
+
 
   useEffect(() => {
-    const fetch = async () => {
-      const res = await getTransacoesSemVinculo();
-      setData(res || []);
-    };
-    fetch();
+    try {
+      setLoading(true);
+      const fetch = async () => {
+        const res = await getTransacoesSemVinculo();
+        const sorted = [...res].sort((a, b) => {
+          const totalA = a?.transacoes?.reduce(
+            (sum, t) => sum + (t?.valorParcelaLiquido ?? 0),
+            0
+          ) ?? 0;
+
+          const totalB = b?.transacoes?.reduce(
+            (sum, t) => sum + (t?.valorParcelaLiquido ?? 0),
+            0
+          ) ?? 0;
+
+          return totalA - totalB;
+        });
+        setData(sorted || []);
+        setDataFiltrada(sorted || []);
+      };
+      fetch();
+    } catch (error) {
+      console.error("Erro ao buscar transações sem vínculo:", error);
+    } finally {
+      setLoading(false);
+    }
+
   }, []);
 
   const closeModal = () => {
-    const updatedData = data.filter(item => item.numAutorizacao !== selectedItem?.numAutorizacao);
+    const updatedData = dataFiltrada.filter(item => item.numAutorizacao !== selectedItem?.numAutorizacao);
     setData(updatedData);
+    setDataFiltrada(updatedData);
     setSelectedItem(null);
     setModalOpen(false);
   };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "") {
+      setDataFiltrada(data);
+      return;
+    }
+    const filtered = data.filter(item => item.numAutorizacao.toString().includes(value));
+    setDataFiltrada(filtered);
+  }
 
   const formatMoney = (value: number) =>
     value.toLocaleString("pt-BR", {
@@ -32,56 +70,63 @@ export const ConciliacaoSemVinculo = () => {
   const formatDate = (date: string) =>
     new Date(date).toLocaleString("pt-BR");
 
-  return data.length == 0 ? <h2>Nenhuma transação pendente de vínculo.</h2> : (
+  if (loading) { <Spinner fullScreen /> }
+
+  return (
     <div style={styles.container}>
-      <h2 style={styles.title}>🔗 Pendentes de Vínculo</h2>
 
-      <div style={styles.grid}>
-        {data.map((item) => {
-          const t = item.transacoes[0];
+      <div style={styles.header}>
+        <h2 style={styles.title}>🔗 Pendentes de Vínculo</h2>
+        <input style={styles.input} type="text" placeholder="Número da Autorização" onChange={handleSearch} />
+      </div>
+      {dataFiltrada.length == 0 ? <div style={styles.empty}>
+        Nenhuma transação encontrada
+      </div> : (
+        <div style={styles.grid}>
+          {dataFiltrada.map((item) => {
+            const t = item.transacoes[0];
 
-          return (
-            <div key={item.numAutorizacao} style={styles.card}>
-              <div style={styles.header}>
-                <span style={styles.autorizacao}>
-                  {item.numAutorizacao}
-                </span>
+            return (
+              <div key={item.numAutorizacao} style={styles.card}>
+                <div style={styles.header}>
+                  <span style={styles.autorizacao}>
+                    {item.numAutorizacao}
+                  </span>
 
-                <span style={styles.badge}>
-                  {t.bandeira}
-                </span>
+                  <span style={styles.badge}>
+                    {t.bandeira}
+                  </span>
+                </div>
+
+                <div style={styles.body}>
+                  <p><strong>Parcela:</strong> {t.parcela}/{t.totalParcela}</p>
+                  <p><strong>Valor:</strong> {formatMoney(t.valorParcelaLiquido)}</p>
+                  <p><strong>Total:</strong> {formatMoney(t.totalPlanoVenda)}</p>
+                  <p><strong>Data:</strong> {formatDate(t.dataTransacao)}</p>
+                </div>
+
+                <button
+                  style={styles.button}
+                  onClick={() => {
+                    setSelectedItem(item);
+                    setModalOpen(true);
+                  }}
+                >
+                  Vincular
+                </button>
               </div>
+            );
+          })}
+        </div>)}
 
-              <div style={styles.body}>
-                <p><strong>Parcela:</strong> {t.parcela}/{t.totalParcela}</p>
-                <p><strong>Valor:</strong> {formatMoney(t.valorParcelaLiquido)}</p>
-                <p><strong>Total:</strong> {formatMoney(t.totalPlanoVenda)}</p>
-                <p><strong>Data:</strong> {formatDate(t.dataTransacao)}</p>
-              </div>
-
-              <button
-                style={styles.button}
-                onClick={() => {
-                  setSelectedItem(item);
-                  setModalOpen(true);
-                }}
-              >
-                Vincular
-              </button>
-            </div>
-          );
-        })}
-      </div>     
-
-    {selectedItem && (
-      <ModalGetNota
-        visible={modalOpen}
-        onClose={() => closeModal()}
-        concil={selectedItem}
-      />
-    )}
-    </div>
-  );
+      {selectedItem && (
+        <ModalGetNota
+          visible={modalOpen}
+          onClose={() => closeModal()}
+          concil={selectedItem}
+        />
+      )}
+    </div>)
 };
 
 const styles = {
@@ -89,6 +134,19 @@ const styles = {
     padding: "20px",
     backgroundColor: "#f8fafc",
     minHeight: "100vh",
+  },
+  empty: {
+    textAlign: "center" as const,
+    marginTop: "40px",
+    color: "#64748b",
+  },
+  input: {
+    width: "350px",
+    padding: "10px",
+    marginBottom: "10px",
+    marginTop: "10px",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
   },
 
   title: {
