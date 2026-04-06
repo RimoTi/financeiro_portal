@@ -3,8 +3,5 @@ export interface csvEcommerceImport {
   parcela: number;
   totalParcela: number;
   valorLiquido: number;
-  portadorMovimento: string;
-  tpMovimento: string;
-  portadorTaxa: string;
-  tpMovimentoTaxa: string;
+  data: Date;
 }

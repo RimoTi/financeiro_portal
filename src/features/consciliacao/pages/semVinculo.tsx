@@ -41,7 +41,7 @@ export const ConciliacaoSemVinculo = () => {
       setLoading(false);
     }
 
-  }, []);
+  }, [modalOpen]);
 
   const closeModal = () => {
     const updatedData = dataFiltrada.filter(item => item.numAutorizacao !== selectedItem?.numAutorizacao);
@@ -94,7 +94,7 @@ export const ConciliacaoSemVinculo = () => {
                   </span>
 
                   <span style={styles.badge}>
-                    {t.bandeira}
+                    💳 {t.bandeira}
                   </span>
                 </div>
 

@@ -1,21 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 
-import { getTransacoesPendentesBaixa } from "../consciliacaoService";
+import { baixarTitulosPendente, getTransacoesPendentesBaixa } from "../consciliacaoService";
 import { Transacao } from "../types";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 
 export const PendentesBaixa = () => {
 
     const [pendentesBaixa, setPendentesBaixa] = React.useState<Transacao[]>([]);
+    const [dataBaixa, setDataBaixa] = useState(new Date());
+    const navigate = useNavigate();
     React.useEffect(() => {
         const fetchData = async () => {
             try {
 
-                const dataBaixa = await getTransacoesPendentesBaixa();
-                const dataBaixaFiltrada = dataBaixa.filter((item) =>
+                const pend = await getTransacoesPendentesBaixa();
+                const pendentesBaixaFiltrada = pend.filter((item) =>
                     item.vincTitNfs?.nfsSaida?.id
                 );
-                setPendentesBaixa(dataBaixaFiltrada);
+                setPendentesBaixa(pendentesBaixaFiltrada);
             } catch (error) {
                 console.error("Erro ao buscar transações sem vínculo:", error);
             }
@@ -32,85 +36,120 @@ export const PendentesBaixa = () => {
     const formatDate = (date: string) =>
         new Date(date).toLocaleString("pt-BR");
 
+    const handleUpload = async () => {
+        try {
+            const response = await baixarTitulosPendente(pendentesBaixa, dataBaixa.toISOString());
+
+            navigate("/consciliacao/retorno", {
+                state: response
+            });
+        } catch (error) {
+            toast.error("Erro ao baixar títulos");
+            console.error("Erro ao baixar títulos:", error);
+        }
+    }
+
     return (
-        <div style={styles.container}>
-            <div style={styles.header}>
-                <h2 style={styles.title}>💳 Transações</h2>
-                <button style={styles.button}>Baixar Títulos</button>
+        <>
+            <div style={styles.inputs}>
+                <label htmlFor="dataBaixa">Data da Baixa:</label>
+                <input style={styles.input} type="date" placeholder="Data da Baixa" value={dataBaixa.toISOString().split("T")[0]} onChange={(e) => setDataBaixa(new Date(e.target.value))} />
             </div>
-
-
-            <div style={styles.grid}>
-                {pendentesBaixa.map((item) => {
-                    const nota = item.vincTitNfs?.nfsSaida;
-
-                    return (
-                        <div key={item.id} style={styles.card}>
-                            {/* HEADER */}
-                            <div style={styles.header}>
-                                <span style={styles.autorizacao}>
-                                    #{item.numAutorizacao}
-                                </span>
-
-                                <span style={styles.badge}>
-                                    {item.bandeira}
-                                </span>
-                            </div>
-
-                            {/* BODY */}
-                            <div style={styles.body}>
-                                <p>
-                                    <strong>Parcela:</strong>{" "}
-                                    {item.parcela}/{item.totalParcela}
-                                </p>
-
-                                <p>
-                                    <strong>Valor:</strong>{" "}
-                                    {formatMoney(item.valorParcelaLiquido)}
-                                </p>
-
-                                <p>
-                                    <strong>Total Venda:</strong>{" "}
-                                    {formatMoney(item.totalPlanoVenda)}
-                                </p>
-
-                                <p>
-                                    <strong>Data:</strong>{" "}
-                                    {formatDate(item.dataTransacao)}
-                                </p>
-                            </div>
-
-                            {/* NOTA */}
-                            <div style={styles.footer}>
-                                {nota ? (
-                                    <div style={styles.notaOk}>
-                                        NF #{nota.numNf}
-                                    </div>
-                                ) : (
-                                    <div style={styles.notaPendente}>
-                                        Sem Nota Fiscal
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {pendentesBaixa.length === 0 && (
-                <div style={styles.empty}>
-                    Nenhuma transação encontrada
+            <div style={styles.container}>
+                <div style={styles.header}>
+                    <h2 style={styles.title}>💳 Transações</h2>
+                    <button style={styles.button} onClick={handleUpload}>
+                        Baixar Títulos
+                    </button>
                 </div>
-            )}
-        </div>
+
+
+                <div style={styles.grid}>
+                    {pendentesBaixa.map((item) => {
+                        const nota = item.vincTitNfs?.nfsSaida;
+
+                        return (
+                            <div key={item.id} style={styles.card}>
+                                {/* HEADER */}
+                                <div style={styles.header}>
+                                    <span style={styles.autorizacao}>
+                                        #{item.numAutorizacao}
+                                    </span>
+
+                                    <span style={styles.badge}>
+                                        💳 {item.bandeira}
+                                    </span>
+                                </div>
+
+                                {/* BODY */}
+                                <div style={styles.body}>
+                                    <p>
+                                        <strong>Parcela:</strong>{" "}
+                                        {item.parcela}/{item.totalParcela}
+                                    </p>
+
+                                    <p>
+                                        <strong>Valor:</strong>{" "}
+                                        {formatMoney(item.valorParcelaLiquido)}
+                                    </p>
+
+                                    <p>
+                                        <strong>Total Venda:</strong>{" "}
+                                        {formatMoney(item.totalPlanoVenda)}
+                                    </p>
+
+                                    <p>
+                                        <strong>Data:</strong>{" "}
+                                        {formatDate(item.dataTransacao)}
+                                    </p>
+                                </div>
+
+                                {/* NOTA */}
+                                <div style={styles.footer}>
+                                    {nota ? (
+                                        <div style={styles.notaOk}>
+                                            NF #{nota.numNf}
+                                        </div>
+                                    ) : (
+                                        <div style={styles.notaPendente}>
+                                            Sem Nota Fiscal
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {pendentesBaixa.length === 0 && (
+                    <div style={styles.empty}>
+                        Nenhuma transação encontrada
+                    </div>
+                )}
+            </div>
+        </>
+
     );
 };
 
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
     container: {
         padding: "24px",
         backgroundColor: "#f1f5f9",
         minHeight: "100vh",
+    },
+    input: {
+        width: "250px",
+        padding: "10px",
+        marginBottom: "10px",
+        marginTop: "10px",
+        borderRadius: "8px",
+        border: "1px solid #ccc",
+    },
+    inputs: {
+        display: "flex",
+        flexDirection: "column",
+        marginBottom: "20px",
     },
 
     title: {

@@ -6,15 +6,23 @@ type ApiResponse = {
   message: string;
 };
 
-export async function importarCsv(data: csvEcommerceImport[]): Promise<string> {
+interface Resultado {
+  transacaoId: number;
+  numNf: number;
+  status: string;
+  mensagem: string;
+}
+
+export async function importarCsv(data: csvEcommerceImport[]): Promise<Resultado[]> {
   try {
 
     const response = await api.post<ApiResponse>(
-      "/Conciliacao/ImportarCsv",
+      "/Conciliacao/BaixarDireto",
       data
     );
 
-    return response.data.message || "Importação realizada com sucesso!";
+    return response.data as unknown as Resultado[];
+
   } catch (error: unknown) {
 
   if (axios.isAxiosError(error)) {

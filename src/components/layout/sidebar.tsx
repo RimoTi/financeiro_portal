@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
         </CNavItem>
 
         {/* DROPDOWN */}
-        <CNavGroup toggler="⚙️ Conciliação">
+        <CNavGroup toggler="⚙️ Conciliação 💳">
 
           <CNavItem>
             <Link to="/consciliacao/importar" className="nav-link">

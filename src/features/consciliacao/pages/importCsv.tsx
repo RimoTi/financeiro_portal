@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import Papa, { ParseResult } from "papaparse";
-import { validarCsv, getAllSisPag, mapCsvToDto, importarCsv } from "../consciliacaoService";
-import { CsvSisPag, Coluna, validarCsv as validarCsvType } from "../types";
+import { validarCsv, mapCsvToDto, importarCsv } from "../consciliacaoService";
+import { Coluna, validarCsv as validarCsvType } from "../types";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
@@ -11,11 +11,11 @@ type CsvRow = Record<string, string>;
 export const ImportCsv: React.FC = () => {
   const [data, setData] = useState<CsvRow[]>([]);
   const [fileName, setFileName] = useState("");
-  const [sistPagId, setSistPagId] = useState(1); // Exemplo fixo, ajustar conforme necessário
-  const [sistemasPagamento, setSistemasPagamento] = useState<CsvSisPag[]>([]);
+  //const [sistPagId, setSistPagId] = useState(1); // Exemplo fixo, ajustar conforme necessário
+  //const [sistemasPagamento, setSistemasPagamento] = useState<CsvSisPag[]>([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+/*
   useEffect(() => {
     const carregar = async () => {
       try {
@@ -30,7 +30,7 @@ export const ImportCsv: React.FC = () => {
       }
     };
     carregar();
-  }, []);
+  }, []);*/
 
   const handleFile = (file: File) => {
     try {
@@ -73,7 +73,7 @@ export const ImportCsv: React.FC = () => {
           posicaoColuna: index + 1,
         }));
       const requestData: validarCsvType = {
-        sistPagId: sistPagId,
+        sistPagId: 1,
         colunas,
       };
 
@@ -89,8 +89,7 @@ export const ImportCsv: React.FC = () => {
       } finally {
         setLoading(false);
       }
-      const novoArray = data.slice(1);
-      const dtoArray = mapCsvToDto(novoArray, sistPagId);
+      const dtoArray = mapCsvToDto(data, 1);
       console.log("Dados para importação:", dtoArray);
       try {
         setLoading(true);
@@ -117,15 +116,7 @@ export const ImportCsv: React.FC = () => {
 
   return (
     <div style={styles.wrapper}>
-      <div style={styles.container}>
-        <h5>Sistema de Pagamento</h5>
-        <select style={styles.select} name="" id="" onChange={(e) => setSistPagId(Number(e.target.value))}>
-          {sistemasPagamento.map((sis) => (
-            <option key={sis.id} value={sis.id}>
-              {sis.sistPag}
-            </option>
-          ))}
-        </select>
+      <div style={styles.container}>       
         <h2 style={styles.title}>Importar CSV</h2>
 
         <div

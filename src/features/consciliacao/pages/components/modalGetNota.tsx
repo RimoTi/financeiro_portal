@@ -30,7 +30,7 @@ export const ModalGetNota: React.FC<Props> = ({
             const data = await getNota(apiResquestGetNota); // sua API
             setNota(data);
         } catch (err) {
-            console.error(err);
+            toast.error(err instanceof Error ? err.message : "Erro ao buscar nota");
         } finally {
             setLoading(false);
         }

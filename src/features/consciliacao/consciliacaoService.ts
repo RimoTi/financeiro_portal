@@ -148,13 +148,20 @@ export const mapCsvToDto = (
     }));
 };
 
-export async function baixarTitulosPendente(data: Transacao[]): Promise<string> {
+interface Resultado {
+  transacaoId: number;
+  numNf: number;
+  status: string;
+  mensagem: string;
+}
+
+export async function baixarTitulosPendente(data: Transacao[], dataBaixa: string): Promise<Resultado[]> {
   try {
     const response = await api.post<ApiResponse>(
-      "/Conciliacao/BaixarTitulos",
+      `/Conciliacao/BaixarTitulos?dataBaixa=${encodeURIComponent(dataBaixa)}`,
       data
     );
-    return response.data.message || "titulos baixados com sucesso!";
+    return response.data as unknown as Resultado[];
   } catch (error: unknown) {
     if (axios.isAxiosError<ApiResponse>(error)) {
       console.log(error.response?.data?.message || "Erro ao buscar sistema de pagamento");
@@ -199,7 +206,7 @@ export async function getNota(data: ApiResquestGetNota): Promise<NotaFiscal> {
     return response.data;
   } catch (error: unknown) {
     if (axios.isAxiosError<ApiResponse>(error)) {
-      console.log(error.response?.data?.message || "Erro ao buscar nota");
+      console.log(error.response?.data || "Erro ao buscar nota");
     }
     throw new Error("Erro ao buscar nota");
   }

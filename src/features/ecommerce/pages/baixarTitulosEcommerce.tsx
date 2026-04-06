@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Papa, { ParseResult } from "papaparse";
-//import { importarCsv } from "../ecommerceService";
+import { importarCsv } from "../ecommerceService";
 import { csvEcommerceImport } from "../types";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -13,21 +13,13 @@ export const ImportCsvEcommerce: React.FC = () => {
     const [fileName, setFileName] = useState("");
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [portadorBaixa, setPortadorBaixa] = useState("");
-    const [tpMovimentoBaixa, setTpMovimentoBaixa] = useState("");
-    const [portadorTaxa, setPortadorTaxa] = useState("");
-    const [tpMovimentoTaxa, setTpMovimentoTaxa] = useState("");
+    const [dataBaixa, setDataBaixa] = useState(new Date());
 
-    const validarCampos = (): boolean => {
-        if (!portadorBaixa || !tpMovimentoBaixa || !portadorTaxa || !tpMovimentoTaxa) {
-            toast.error("Por favor, preencha todos os campos antes de importar.");
-            return false;
-        }
-        return true;
-    };
+
+
 
     const validarEstruturaCsv = (data: CsvRow[]): boolean => {
-        const colunasEsperadas = ["Nota Fiscal", "Parcela", "Total Parcela", "Valor Liquido"];
+        const colunasEsperadas = ["Nota Fiscal", "Parcela", "Total Parcelas", "Valor Liquido"];
         const colunasCsv = Object.keys(data[0] || {});
         const colunasFaltando = colunasEsperadas.filter(col => !colunasCsv.includes(col));
 
@@ -89,29 +81,38 @@ export const ImportCsvEcommerce: React.FC = () => {
         if (file) handleFile(file);
     };
 
+    const parseCurrency = (value: string): number => {
+  if (!value) return 0;
+
+  return Number(
+    value
+      .replace(/\s/g, "")      // remove espaços
+      .replace("R$", "")       // remove moeda
+      .replace(/\./g, "")      // remove milhar
+      .replace(",", ".")       // troca decimal
+  );
+};
+
     const handleUpload = async () => {
-        if (!validarCampos()) return;
         if (!validaNotasDuplicadas(data)) return;
         if (!validarEstruturaCsv(data)) return;
         try {
 
-            const novoArray = data.slice(1);
-            const dtoArray = novoArray.map<csvEcommerceImport>((row) => ({
-                numNf: Number(row["numNf"]),
-                parcela: Number(row["parcela"]),
-                totalParcela: Number(row["totalParcela"]),
-                valorLiquido: Number(row["valorLiquido"]),
-                portadorMovimento: portadorBaixa,
-                tpMovimento: tpMovimentoBaixa,
-                portadorTaxa: portadorTaxa,
-                tpMovimentoTaxa: tpMovimentoTaxa,
+            const dtoArray = data.map<csvEcommerceImport>((row) => ({
+                numNf: Number(row["Nota Fiscal"]),
+                parcela: Number(row["Parcela"]),
+                totalParcela: Number(row["Total Parcelas"]),
+                valorLiquido: parseCurrency(row["Valor Liquido"]),
+                data: dataBaixa
             }));
 
             console.log("Dados para importação:", dtoArray);
             try {
                 setLoading(true);
-                //const response = await importarCsv(dtoArray);
-                //toast.success(response);
+                const response = await importarCsv(dtoArray);
+                navigate("/consciliacao/retorno", {
+                state: response
+            });
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (error: string | any) {
                 toast.error(error);
@@ -120,7 +121,7 @@ export const ImportCsvEcommerce: React.FC = () => {
             } finally {
                 setLoading(false);
             }
-            navigate("/home"); // Redireciona para a página de lista após a importação
+
         } catch (error) {
             console.error(error);
             toast.error("Erro ao enviar dados");
@@ -134,10 +135,8 @@ export const ImportCsvEcommerce: React.FC = () => {
     return (
         <>
             <div style={styles.inputs}>
-                <input style={styles.input} type="text" placeholder="Portador da Baixa" value={portadorBaixa} onChange={(e) => setPortadorBaixa(e.target.value)} />
-                <input style={styles.input} type="text" placeholder="Tipo de Movimento da Baixa" value={tpMovimentoBaixa} onChange={(e) => setTpMovimentoBaixa(e.target.value)} />
-                <input style={styles.input} type="text" placeholder="Portador da Taxa" value={portadorTaxa} onChange={(e) => setPortadorTaxa(e.target.value)} />
-                <input style={styles.input} type="text" placeholder="Tipo de Movimento da Taxa" value={tpMovimentoTaxa} onChange={(e) => setTpMovimentoTaxa(e.target.value)} />
+                <label htmlFor="dataBaixa">Data da Baixa:</label>
+                <input style={styles.input} type="date" placeholder="Data da Baixa" value={dataBaixa.toISOString().split("T")[0]} onChange={(e) => setDataBaixa(new Date(e.target.value))} />
             </div>
             <div style={styles.wrapper}>
                 <div style={styles.container}>
@@ -195,7 +194,7 @@ export const ImportCsvEcommerce: React.FC = () => {
 
 const styles: { [key: string]: React.CSSProperties } = {
     input: {
-        width: "100%",
+        width: "250px",
         padding: "10px",
         marginBottom: "10px",
         marginTop: "10px",
@@ -204,7 +203,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     },
     inputs: {
         display: "flex",
-        gap: "20px",
+        flexDirection: "column",
         marginBottom: "20px",
     },
     wrapper: {
