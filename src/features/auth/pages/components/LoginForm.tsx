@@ -8,7 +8,6 @@ const Login: React.FC = () => {
   const [senha, setSenha] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const { logout } = useAuth();
 
 
 
@@ -29,7 +28,6 @@ const Login: React.FC = () => {
         navigate('/home');
       } else {
         setError('Erro ao logar.');
-        logout();
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
