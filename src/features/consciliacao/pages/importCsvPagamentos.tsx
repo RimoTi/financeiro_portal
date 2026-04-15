@@ -1,36 +1,18 @@
 import React, {  useState } from "react";
 import Papa, { ParseResult } from "papaparse";
-import { validarCsv, mapCsvToDto, importarCsv } from "../consciliacaoService";
-import { Coluna, validarCsv as validarCsvType } from "../types";
+import { mapCsvToDto, importarCsv } from "../consciliacaoService";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
 
 type CsvRow = Record<string, string>;
 
-export const ImportCsv: React.FC = () => {
+export const ImportCsvPagamentos: React.FC = () => {
   const [data, setData] = useState<CsvRow[]>([]);
   const [fileName, setFileName] = useState("");
-  //const [sistPagId, setSistPagId] = useState(1); // Exemplo fixo, ajustar conforme necessário
-  //const [sistemasPagamento, setSistemasPagamento] = useState<CsvSisPag[]>([]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-/*
-  useEffect(() => {
-    const carregar = async () => {
-      try {
-        setLoading(true);
-        const response = await getAllSisPag();
-        //console.log("Sistemas de Pagamento:", response);
-        setSistemasPagamento(response);
-      } catch (error) {
-        console.error("Erro ao buscar sistemas de pagamento:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    carregar();
-  }, []);*/
+
 
   const handleFile = (file: File) => {
     try {
@@ -66,30 +48,7 @@ export const ImportCsv: React.FC = () => {
   const handleUpload = async () => {
     try {
 
-      const colunas: Coluna[] = Object.keys(data[0])
-        .sort((a, b) => Number(a.replace("_", "")) - Number(b.replace("_", "")))
-        .map((key, index) => ({
-          nomeColunaCsv: key,
-          posicaoColuna: index + 1,
-        }));
-      const requestData: validarCsvType = {
-        sistPagId: 1,
-        colunas,
-      };
-
-      try {
-        setLoading(true);
-        const response = await validarCsv(requestData);
-        toast.success(response);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: string | any) {
-        toast.error(error);
-        return; // interrompe o processo se houver erro
-        //console.log(msg); // ou toast
-      } finally {
-        setLoading(false);
-      }
-      const dtoArray = mapCsvToDto(data, 1);
+      const dtoArray = mapCsvToDto(data);
       console.log("Dados para importação:", dtoArray);
       try {
         setLoading(true);
@@ -117,7 +76,7 @@ export const ImportCsv: React.FC = () => {
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>       
-        <h2 style={styles.title}>Importar CSV</h2>
+        <h2 style={styles.title}>Importar CSV Pagamentos Recebidos</h2>
 
         <div
           style={styles.dropzone}
@@ -157,6 +116,7 @@ export const ImportCsv: React.FC = () => {
             </table>
           </div>
         )}
+
       </div>
       {data.length > 0 && (
         <button style={styles.fab} onClick={handleUpload}>

@@ -1,31 +1,75 @@
 import React, { useState } from "react";
-
-import { baixarTitulosPendente, getTransacoesPendentesBaixa } from "../consciliacaoService";
-import { Transacao } from "../types";
+import {  Pagamento } from "../types";
+import {getTransacoesPendentesBaixa} from "../consciliacaoService"
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { Spinner } from "@components/spinner";
+import { ModalDetalhesBaixa } from "./components/modalDetalhesBaixa";
 
+type modalDetalhesBaixaProps = {
+    dataMovimentacao: Date;
+    valorTotal: number;
+    totalPagamentos: number;
+}
 
 export const PendentesBaixa = () => {
 
-    const [pendentesBaixa, setPendentesBaixa] = React.useState<Transacao[]>([]);
+    const [pendentesBaixa, setPendentesBaixa] = React.useState<Pagamento[]>([]);
     const [dataBaixa, setDataBaixa] = useState(new Date());
-    const navigate = useNavigate();
-    React.useEffect(() => {
-        const fetchData = async () => {
-            try {
+    const [loading, setLoading] = useState(false);
+    const [modalDetalhesBaixaVisible, setModalDetalhesBaixaVisible] = useState(false);
+    const [modalDetalhesBaixaProps, setModalDetalhesBaixaProps] = useState<modalDetalhesBaixaProps>({} as modalDetalhesBaixaProps);
 
-                const pend = await getTransacoesPendentesBaixa();
-                const pendentesBaixaFiltrada = pend.filter((item) =>
-                    item.vincTitNfs?.nfsSaida?.id
-                );
-                setPendentesBaixa(pendentesBaixaFiltrada);
+    const navigate = useNavigate();
+    /* React.useEffect(() => {
+         const fetchData = async () => {
+             try {
+                 setLoading(true);
+ 
+                 const pend = await getTransacoesPendentesBaixa();
+                 const pendentesBaixaFiltrada = pend.filter((item) =>
+                     item.notasFiscais.length > 0 && item.notasFiscais[0].numNf !== 0
+                 );
+                 setPendentesBaixa(pendentesBaixaFiltrada);
+             } catch (error) {
+                 console.error("Erro ao buscar transações sem vínculo:", error);
+             } finally {
+                 setLoading(false);
+             }
+         };
+         fetchData();
+     }, []);*/
+
+
+
+    React.useEffect(() => {
+        const fetch = async () => {
+            try {
+                const data = await getTransacoesPendentesBaixa();
+                setPendentesBaixa(data);
             } catch (error) {
                 console.error("Erro ao buscar transações sem vínculo:", error);
+            } finally {
+                setLoading(false);
             }
         };
-        fetchData();
+
+        fetch();
     }, []);
+
+    const handleOpenModalDetalhesBaixa = () => {
+        const prosModalDetalhesBaixaProps: modalDetalhesBaixaProps = {
+            dataMovimentacao: dataBaixa,
+            valorTotal: pendentesBaixa.reduce((acc, item) => acc + item.valorParcelaLiquido, 0),
+            totalPagamentos: pendentesBaixa.length,
+        }
+        setModalDetalhesBaixaProps(prosModalDetalhesBaixaProps);
+        setModalDetalhesBaixaVisible(true);
+    }
+
+    const closeModalDetalhesBaixa = () => {
+        setModalDetalhesBaixaVisible(false);
+    }
 
     const formatMoney = (value: number) =>
         value.toLocaleString("pt-BR", {
@@ -38,15 +82,25 @@ export const PendentesBaixa = () => {
 
     const handleUpload = async () => {
         try {
-            const response = await baixarTitulosPendente(pendentesBaixa, dataBaixa.toISOString());
+            //const response = await baixarTitulosPendente(pendentesBaixa, dataBaixa.toISOString());
+            const ids: number[] = pendentesBaixa
+                .map(p => p.id)
+                .filter((id): id is number => id != null);
+            console.log(ids);
 
             navigate("/consciliacao/retorno", {
-                state: response
+                state: []
             });
         } catch (error) {
             toast.error("Erro ao baixar títulos");
             console.error("Erro ao baixar títulos:", error);
         }
+    }
+
+    if (loading) {
+        return (
+            <Spinner text="Carregando Titulos..." />
+        );
     }
 
     return (
@@ -58,7 +112,7 @@ export const PendentesBaixa = () => {
             <div style={styles.container}>
                 <div style={styles.header}>
                     <h2 style={styles.title}>💳 Transações</h2>
-                    <button style={styles.button} onClick={handleUpload}>
+                    <button style={styles.button} onClick={handleOpenModalDetalhesBaixa}>
                         Baixar Títulos
                     </button>
                 </div>
@@ -66,8 +120,6 @@ export const PendentesBaixa = () => {
 
                 <div style={styles.grid}>
                     {pendentesBaixa.map((item) => {
-                        const nota = item.vincTitNfs?.nfsSaida;
-
                         return (
                             <div key={item.id} style={styles.card}>
                                 {/* HEADER */}
@@ -103,19 +155,7 @@ export const PendentesBaixa = () => {
                                         {formatDate(item.dataTransacao)}
                                     </p>
                                 </div>
-
-                                {/* NOTA */}
-                                <div style={styles.footer}>
-                                    {nota ? (
-                                        <div style={styles.notaOk}>
-                                            NF #{nota.numNf}
-                                        </div>
-                                    ) : (
-                                        <div style={styles.notaPendente}>
-                                            Sem Nota Fiscal
-                                        </div>
-                                    )}
-                                </div>
+                             
                             </div>
                         );
                     })}
@@ -127,10 +167,21 @@ export const PendentesBaixa = () => {
                     </div>
                 )}
             </div>
+            <ModalDetalhesBaixa
+                modalDetalhesBaixaProps={modalDetalhesBaixaProps}
+                visible={modalDetalhesBaixaVisible}
+                baixarTitulos={handleUpload}
+                onClose={closeModalDetalhesBaixa}
+            />
         </>
 
+
     );
+
 };
+
+
+
 
 const styles: { [key: string]: React.CSSProperties } = {
     container: {
@@ -219,6 +270,7 @@ const styles: { [key: string]: React.CSSProperties } = {
         borderRadius: "8px",
         textAlign: "center" as const,
         fontWeight: "500",
+        marginBottom: "6px",
     },
 
     notaPendente: {

@@ -6,8 +6,9 @@ const Layout = lazy(() => import("@components/layout").then(m => ({ default: m.L
 const PrivateRoute = lazy(() => import("./PrivateRoute").then(m => ({ default: m.PrivateRoute })));
 const Login = lazy(() => import("@features/auth/pages/Login").then(m => ({ default: m.Login })));
 const Home = lazy(() => import("../pages/home").then(m => ({ default: m.Home })));
-const ImportarCSV = lazy(() => import("@features/consciliacao/pages/importCsv").then(m => ({ default: m.ImportCsv })));
-const ConciliacaoSemVinculo = lazy(() => import("@features/consciliacao/pages/semVinculo").then(m => ({ default: m.ConciliacaoSemVinculo })));
+const ImportCsvVendas = lazy(() => import("@features/consciliacao/pages/importCsvVendas").then(m => ({ default: m.ImportCsvVendas })));
+const ImportCSVPagamentos = lazy(() => import("@features/consciliacao/pages/importCsvPagamentos").then(m => ({ default: m.ImportCsvPagamentos })));
+const ConciliacaoSemVinculo = lazy(() => import("@features/consciliacao/pages/pendentesVinculo").then(m => ({ default: m.ConciliacaoSemVinculo })));
 const PendentesBaixa = lazy(() => import("@features/consciliacao/pages/pendentesBaixa").then(m => ({ default: m.PendentesBaixa })));
 const ImportCsvEcommerce = lazy(() => import("@features/ecommerce/pages/baixarTitulosEcommerce").then(m => ({ default: m.ImportCsvEcommerce })));
 const ResultadoBaixaTitulos = lazy(() => import("@features/consciliacao/pages/resultadoBaixaTitulos").then(m => ({ default: m.ResultadoBaixaTitulos })));
@@ -29,7 +30,8 @@ export const AppRoutes = createBrowserRouter([
         children: [
           { path: "/home", element: withSuspense(<Home />) },
           //rotas de conciliação
-          { path: "/consciliacao/importar", element: withSuspense(<ImportarCSV />) },
+          { path: "/consciliacao/importarVendas", element: withSuspense(<ImportCsvVendas />) },
+          { path: "/consciliacao/importarPagamentos", element: withSuspense(<ImportCSVPagamentos />) },
           { path: "/consciliacao/semVinculo", element: withSuspense(<ConciliacaoSemVinculo />) },
           { path: "/consciliacao/pendentesBaixa", element: withSuspense(<PendentesBaixa />) },
           { path: "/baixar/ecommerce", element: withSuspense(<ImportCsvEcommerce />) },

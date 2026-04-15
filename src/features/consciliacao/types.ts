@@ -17,7 +17,9 @@ export interface validarCsv  {
 
 type ISODateString = string;
 
-export interface importarCsv  {
+export interface Pagamento  {
+  id: number | null,
+  concId: number | null,
   numEstabelecimento: string;
   dataTransacao: ISODateString; // ISO date
   numTransacao: string;
@@ -39,7 +41,7 @@ export interface importarCsv  {
   seuNumero: string;
   numOrdemPagamento: string;
   status: string;
-  dataPagamento: ISODateString; // ISO date
+  dataPagamento: Date | null, // ISO date
   numBanco: string;
   numAgencia: string;
   numConta: string;
@@ -47,38 +49,42 @@ export interface importarCsv  {
   descontoParcela: number;
   valorParcelaLiquido: number;
   totalPlanoVenda: number;
-  sistPagId: number;
+  baixado:number;
+  vinculado:number;
 };
 
 export interface Conciliacao {
-  numAutorizacao: string;
-  nfsId: number | null;
-  transacoes: Transacao[];
+  id: number | null;
+  totalNotas:number,
+  vlrTotalAutoriz:number,
+  vlrAbNotas:number,
+  Finalizada:number,
+  totalAutoriz:number,
+  DataUltParc:Date | null,
+  autorizacoes: Autorizacao[];
+  notas: NotaFiscal[]
 }
 export interface NotaFiscal {
   id: number;
+  concId: number;
   numNf: number;
+  chaveAcesso: number;
   nome: string;
   vlrTotal: number;
+  vlrAb: number;
 }
 
-interface VincTitNfs {
-    nfsSaida: NotaFiscal | null;
-}
-
-export interface Transacao {
-  id: number;
-  bandeira: string;
-  parcela: number;
-  totalParcela: number;
-  totalPlanoVenda: number;
-  valorParcelaLiquido: number;
-  dataTransacao: string;
-  numAutorizacao: string;
-  vincTitNfs: VincTitNfs | null;
+export interface Autorizacao {
+  id: number | null;
+  concId: number | null;
+  pagamentoId: number | null;
+  numAutorizacao: string,
+  totalParc: number;
+  vlrTotal: number;
+  DataUltParc:Date | null,
 }
 
 export type ApiResquestGetNota = {
-    numNf: number;
+    numNf: number ;
     chaveAcesso: string;
 }

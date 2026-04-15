@@ -1,6 +1,6 @@
 import React from "react";
 import { getTransacoesSemVinculo, getTransacoesPendentesBaixa } from "../../features/consciliacao/consciliacaoService";
-import { Conciliacao, Transacao } from "../../features/consciliacao/types";
+import {  Pagamento } from "../../features/consciliacao/types";
 import { useLocation } from "react-router-dom";
 
 import {
@@ -18,13 +18,13 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) => {
-  const [conciliacoes, setConciliacoes] = React.useState<Conciliacao[]>([]);
-  const [pendentesBaixa, setPendentesBaixa] = React.useState<Transacao[]>([]);
+  const [pedentesVinculo, setPedentesVinculo] = React.useState<Pagamento[]>([]);
+  const [pendentesBaixa, setPendentesBaixa] = React.useState<Pagamento[]>([]);
   const location = useLocation();
   const fetchData = async () => {
     try {
       const data = await getTransacoesSemVinculo();
-      setConciliacoes(data);
+      setPedentesVinculo(data);
 
       const dataBaixa = await getTransacoesPendentesBaixa();
       setPendentesBaixa(dataBaixa);
@@ -75,8 +75,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
         <CNavGroup toggler="⚙️ Conciliação 💳">
 
           <CNavItem>
-            <Link to="/consciliacao/importar" className="nav-link">
-              📂 Importar CSV
+            <Link to="/consciliacao/importarVendas" className="nav-link">
+              📂 Importar CSV (Vendas)
+            </Link>
+          </CNavItem>
+
+          <CNavItem>
+            <Link to="/consciliacao/importarPagamentos" className="nav-link">
+              📂 Importar CSV (Pagamentos)
             </Link>
           </CNavItem>
 
@@ -86,9 +92,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
                 📋 Pendentes Vínculo
               </Link>
 
-              {conciliacoes.length > 0 && (
+              {pedentesVinculo.length > 0 && (
                 <span style={{ ...styles.badge, ...styles.badgeVinculo }}>
-                  {conciliacoes.length}
+                  {pedentesVinculo.length}
                 </span>
               )}
             </div>
@@ -102,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
               {pendentesBaixa.length > 0 && (
                 <span style={{ ...styles.badge, ...styles.badgeBaixa }}>
                   {pendentesBaixa.filter((item) =>
-                    item.vincTitNfs?.nfsSaida?.id
+                    item.concId != null && item.concId != undefined
                   ).length}
                 </span>
               )}

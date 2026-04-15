@@ -6,7 +6,16 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 400;
+}
+
+h1, h2, h3 {
+  font-weight: 500;
+}
+
+strong, b {
+  font-weight: 700;
 }
 
 .logo {
@@ -43,10 +52,6 @@ body {
 
 .read-the-docs {
   color: #888;
-}
-
-:root {
-  --cui-font-sans-serif: 'Inter', sans-serif;
 }
 
 @keyframes spin {
