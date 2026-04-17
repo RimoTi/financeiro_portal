@@ -1,14 +1,26 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getHistoricoMovimentacoes } from "../consciliacaoService";
 import { INotaFiscalHistorico } from "../types";
 import { Spinner } from "@components/spinner";
+import { useLocation } from "react-router-dom";
 
 
 export const HistoricoMov: React.FC = () => {
     const [numeroNota, setNumeroNota] = useState("");
     const [historico, setHistorico] = useState<INotaFiscalHistorico | null>(null);
     const [loading, setLoading] = useState(false);
+
+    const location = useLocation();
+
+    const numNf = location.state?.numNf || "";
+
+useEffect(() => {
+    if (numNf) {
+        const nota = String(numNf);
+        setNumeroNota(nota);
+    }
+}, [numNf]);
 
 
     const handleBuscarHistorico = async () => {
@@ -22,12 +34,12 @@ export const HistoricoMov: React.FC = () => {
             setHistorico(data);
         } catch (err) {
             alert(err instanceof Error ? err.message : "Erro ao buscar histórico de movimentações");
-        }finally {
+        } finally {
             setLoading(false);
         }
     };
     if (loading) {
-        return <Spinner text="Buscados movimentações"/>;
+        return <Spinner text="Buscados movimentações" />;
     }
 
     return (

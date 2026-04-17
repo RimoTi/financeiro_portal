@@ -13,6 +13,11 @@ export const ResultadoBaixaTitulos = () => {
 
   const data = (location.state as Resultado[]) || [];
 
+  const handleNavigate = (numNf: number) => {
+    navigate("/consciliacao/historico", { state: { numNf } });
+  };
+
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>Resultado da Baixa de Títulos</h1>
@@ -21,6 +26,8 @@ export const ResultadoBaixaTitulos = () => {
         <p style={styles.empty}>Nenhum resultado recebido.</p>
       )}
 
+
+
       <div>
         {data.map((item) => (
           <div key={item.numNf} style={styles.card(item.status)}>
@@ -28,15 +35,23 @@ export const ResultadoBaixaTitulos = () => {
               <div style={styles.row}>
                 <span style={styles.nf}>NF: {item.numNf}</span>
 
-                <span
-                  style={
-                    item.status === "Sucesso"
-                      ? styles.statusSuccess
-                      : styles.statusError
-                  }
-                >
-                  {item.status}
-                </span>
+                <div>
+                  <span
+                    style={
+                      item.status === "Sucesso"
+                        ? styles.statusSuccess
+                        : styles.statusError
+                    }
+                  >
+                    {item.status}
+                  </span>
+                  <button
+                    style={{ ...styles.buttonHist, marginLeft: "10px" }}
+                    onClick={() => handleNavigate(item.numNf)}
+                  >
+                    📝
+                  </button>
+                </div>
               </div>
 
               <p style={styles.message}>{item.mensagem}</p>
@@ -127,6 +142,15 @@ const styles: { [key: string]: any } = {
   button: {
     padding: "10px 16px",
     backgroundColor: "#2563eb",
+    color: "#fff",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+
+    buttonHist: {
+    padding: "5px 10px",
+    backgroundColor: "#60be4d",
     color: "#fff",
     border: "none",
     borderRadius: "8px",

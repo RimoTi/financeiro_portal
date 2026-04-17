@@ -189,7 +189,6 @@ export async function getTransacoesPendentesBaixa(): Promise<Pagamento[]> {
 }
 
 export async function getNota(data: ApiResquestGetNota): Promise<NotaFiscal> {
-  try {
     const response = await api.get<NotaFiscal>(
       "/Conciliacao/BuscarNota",{
       params: { 
@@ -200,12 +199,6 @@ export async function getNota(data: ApiResquestGetNota): Promise<NotaFiscal> {
     }
     );
     return response.data;
-  } catch (error: unknown) {
-    if (axios.isAxiosError<ApiResponse>(error)) {
-      console.log(error.response?.data || "Erro ao buscar nota");
-    }
-    throw new Error("Erro ao buscar nota");
-  }
 }
 
 export async function vincularNota(transacao: Conciliacao): Promise<string> {

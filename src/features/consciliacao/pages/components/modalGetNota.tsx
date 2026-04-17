@@ -33,8 +33,15 @@ export const ModalGetNota: React.FC<Props> = ({
         try {
             const data = await getNota(apiResquestGetNota);
             setNota(data);
-        } catch (err) {
-            toast.error(err instanceof Error ? err.message : "Erro ao buscar nota");
+            
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error:any) {
+                    const mensagem =
+                    error?.response?.data ||
+                    error?.response?.data?.message ||
+                    "Erro ao processar"
+            
+                    toast.error(mensagem)
         } finally {
             setLoading(false);
             setApiRequestGetNota({ numNf: 0, chaveAcesso: "" });
