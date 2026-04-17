@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {  Pagamento } from "../types";
-import {getTransacoesPendentesBaixa} from "../consciliacaoService"
+import {getTransacoesPendentesBaixa, baixarTitulosPendente} from "../consciliacaoService"
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
@@ -21,30 +21,11 @@ export const PendentesBaixa = () => {
     const [modalDetalhesBaixaProps, setModalDetalhesBaixaProps] = useState<modalDetalhesBaixaProps>({} as modalDetalhesBaixaProps);
 
     const navigate = useNavigate();
-    /* React.useEffect(() => {
-         const fetchData = async () => {
-             try {
-                 setLoading(true);
- 
-                 const pend = await getTransacoesPendentesBaixa();
-                 const pendentesBaixaFiltrada = pend.filter((item) =>
-                     item.notasFiscais.length > 0 && item.notasFiscais[0].numNf !== 0
-                 );
-                 setPendentesBaixa(pendentesBaixaFiltrada);
-             } catch (error) {
-                 console.error("Erro ao buscar transações sem vínculo:", error);
-             } finally {
-                 setLoading(false);
-             }
-         };
-         fetchData();
-     }, []);*/
-
-
 
     React.useEffect(() => {
         const fetch = async () => {
             try {
+                setLoading(true);
                 const data = await getTransacoesPendentesBaixa();
                 setPendentesBaixa(data);
             } catch (error) {
@@ -82,14 +63,15 @@ export const PendentesBaixa = () => {
 
     const handleUpload = async () => {
         try {
-            //const response = await baixarTitulosPendente(pendentesBaixa, dataBaixa.toISOString());
+
             const ids: number[] = pendentesBaixa
                 .map(p => p.id)
                 .filter((id): id is number => id != null);
-            console.log(ids);
+
+                const response = await baixarTitulosPendente(ids, dataBaixa.toISOString());
 
             navigate("/consciliacao/retorno", {
-                state: []
+                state: response
             });
         } catch (error) {
             toast.error("Erro ao baixar títulos");

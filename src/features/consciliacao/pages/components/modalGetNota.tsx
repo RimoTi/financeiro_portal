@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { getNota } from "@features/consciliacao/consciliacaoService";
 import { NotaFiscal, ApiResquestGetNota } from "@features/consciliacao/types";
 import { toast } from "react-toastify";
@@ -19,7 +19,12 @@ export const ModalGetNota: React.FC<Props> = ({
     const [apiResquestGetNota, setApiRequestGetNota] = useState<ApiResquestGetNota>({ numNf: 0, chaveAcesso: "" });
     const [nota, setNota] = useState<NotaFiscal | null>(null);
     const [loading, setLoading] = useState(false);
+    
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
 
     const fetchNota = async () => {
@@ -39,7 +44,8 @@ export const ModalGetNota: React.FC<Props> = ({
     const handelAdicionarNota = () => {
         if (nota) {
             selecionarNota(nota);
-            setNota(null)
+            setNota(null);
+            inputRef.current?.focus();
         }
     };
 
@@ -67,6 +73,7 @@ export const ModalGetNota: React.FC<Props> = ({
                     />
 
                     <input
+                    ref={inputRef}
                         placeholder="Chave de acesso..."
                         value={apiResquestGetNota.chaveAcesso || ""}
                         onKeyDown={(e) => {

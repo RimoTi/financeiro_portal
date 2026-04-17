@@ -1,8 +1,8 @@
 import api from '../../services/api';
 import axios from "axios";
-import { Conciliacao, CsvSisPag, NotaFiscal, Pagamento} from './types';
+import { Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento} from './types';
 import { ApiResquestGetNota } from './types';
-import { pagamentosMock } from "./PagamentosMock";
+
 
 
 type ApiResponse = {
@@ -39,21 +39,6 @@ export async function importarCsv(data: Pagamento[]): Promise<string> {
   }
 }
 
-// 🔥 função 2
-export async function getAllSisPag(): Promise<CsvSisPag[]> {
-  try {
-    const response = await api.get<CsvSisPag[]>(
-      "CsvSistPag/BuscarTodos"
-    );
-
-    return response.data || [];
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || "Erro ao buscar dados");
-    }
-    throw new Error("Erro ao buscar dados");
-  }
-}
 
 const toNumber = (value: string): number => {
   if (!value) return 0;
@@ -123,10 +108,6 @@ export const mapCsvToDto = (
     }));
 };
 
-export async function GetMockPagamentos(): Promise<Pagamento[]> {
-  await new Promise(res => setTimeout(res, 500)); // delay fake
-  return pagamentosMock;
-}
 
 export async function getNotaMock(numNf: number): Promise<NotaFiscal> {
   await new Promise(res => setTimeout(res, 500));
@@ -144,7 +125,7 @@ export async function getNotaMock(numNf: number): Promise<NotaFiscal> {
   return nota;
 }
 
-/*
+
 interface Resultado {
   transacaoId: number;
   numNf: number;
@@ -152,12 +133,23 @@ interface Resultado {
   mensagem: string;
 }
 
+type ApiRequest = {
+  dataBaixa: string;
+  pagamentosIds: number[];
+}
 
-export async function baixarTitulosPendente(data: Transacao[], dataBaixa: string): Promise<Resultado[]> {
+
+export async function baixarTitulosPendente(data: number[], dataBaixa: string): Promise<Resultado[]> {
+  const dataRequest: ApiRequest = {
+    dataBaixa,
+    pagamentosIds: data
+  };
+
+  console.log("Data para baixa:", dataRequest);
   try {
     const response = await api.post<ApiResponse>(
-      `/Conciliacao/BaixarTitulos?dataBaixa=${encodeURIComponent(dataBaixa)}`,
-      data
+      `/Conciliacao/BaixarTitulos`,
+      dataRequest
     );
     return response.data as unknown as Resultado[];
   } catch (error: unknown) {
@@ -167,7 +159,7 @@ export async function baixarTitulosPendente(data: Transacao[], dataBaixa: string
     throw new Error("Erro ao buscar sistema de pagamento");
 
   }
-}*/
+}
 
 export async function getTransacoesSemVinculo(): Promise<Pagamento[]> {
   try {
@@ -217,16 +209,22 @@ export async function getNota(data: ApiResquestGetNota): Promise<NotaFiscal> {
 }
 
 export async function vincularNota(transacao: Conciliacao): Promise<string> {
-  try {
+
     const response = await api.post<string>(
       `/Conciliacao/Criar`, transacao
     );
     return response.data;
-  } catch (error: unknown) {
-    if (axios.isAxiosError<ApiResponse>(error)) {
-      console.log(error.response?.data?.message || "Erro ao vincular nota");
-    }
-    throw new Error("Erro ao vincular nota");
-  }
+
+}
+
+export async function getHistoricoMovimentacoes(numNf: number): Promise<INotaFiscalHistorico> {
+
+    const response = await api.get<INotaFiscalHistorico>(
+      "/Conciliacao/HistoricoNf",
+      {
+        params: { numNf }
+      }
+    );
+    return response.data || [];
 }
 

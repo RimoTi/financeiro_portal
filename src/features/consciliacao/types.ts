@@ -1,20 +1,3 @@
-export interface Coluna  {
-    id?: number;
-    nomeColunaCsv: string;
-    posicaoColuna: number;
-};
-
-export interface CsvSisPag  {
-    id?: number;
-    sistPag: number;
-    colunas: Coluna[];
-};
-
-export interface validarCsv  {
-    sistPagId: number;
-    colunas: Coluna[];
-};
-
 type ISODateString = string;
 
 export interface Pagamento  {
@@ -50,7 +33,6 @@ export interface Pagamento  {
   valorParcelaLiquido: number;
   totalPlanoVenda: number;
   baixado:number;
-  vinculado:number;
 };
 
 export interface Conciliacao {
@@ -87,4 +69,34 @@ export interface Autorizacao {
 export type ApiResquestGetNota = {
     numNf: number ;
     chaveAcesso: string;
+}
+
+
+
+export interface INotaFiscalHistorico {
+  id: number;
+  numNf: number;
+  nome: string;
+  vlrTotal: number;
+  vlrAb: number;
+  chaveAcesso: string;
+  titulos: ITitulo[];
+}
+
+interface ITitulo {
+  titCrId: number;
+  emAberto: number;
+  vlrTit: number;
+  vlrAb: number;
+  baixas: IBaixa[];
+}
+
+interface IBaixa {
+  id: number;
+  seq: number;
+  valor: number;
+  vlrAb: number;
+  data: string;
+  tipoMovimento: string;
+  usuario: string;
 }

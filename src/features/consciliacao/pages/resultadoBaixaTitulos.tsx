@@ -23,7 +23,7 @@ export const ResultadoBaixaTitulos = () => {
 
       <div>
         {data.map((item) => (
-          <div key={item.transacaoId} style={styles.card(item.status)}>
+          <div key={item.numNf} style={styles.card(item.status)}>
             <div style={styles.cardContent}>
               <div style={styles.row}>
                 <span style={styles.nf}>NF: {item.numNf}</span>

@@ -12,6 +12,7 @@ const ConciliacaoSemVinculo = lazy(() => import("@features/consciliacao/pages/pe
 const PendentesBaixa = lazy(() => import("@features/consciliacao/pages/pendentesBaixa").then(m => ({ default: m.PendentesBaixa })));
 const ImportCsvEcommerce = lazy(() => import("@features/ecommerce/pages/baixarTitulosEcommerce").then(m => ({ default: m.ImportCsvEcommerce })));
 const ResultadoBaixaTitulos = lazy(() => import("@features/consciliacao/pages/resultadoBaixaTitulos").then(m => ({ default: m.ResultadoBaixaTitulos })));
+const HistoricoMov = lazy(() => import("@features/consciliacao/pages/historicoMov").then(m => ({ default: m.HistoricoMov })));
 
 const withSuspense = (element: JSX.Element) => (
   <Suspense fallback={<div>Carregando...</div>}>{element}</Suspense>
@@ -35,7 +36,8 @@ export const AppRoutes = createBrowserRouter([
           { path: "/consciliacao/semVinculo", element: withSuspense(<ConciliacaoSemVinculo />) },
           { path: "/consciliacao/pendentesBaixa", element: withSuspense(<PendentesBaixa />) },
           { path: "/baixar/ecommerce", element: withSuspense(<ImportCsvEcommerce />) },
-          { path: "/consciliacao/retorno", element: withSuspense(<ResultadoBaixaTitulos />) }
+          { path: "/consciliacao/retorno", element: withSuspense(<ResultadoBaixaTitulos />) },
+          { path: "/consciliacao/historico", element: withSuspense(<HistoricoMov />) }
         ],
       },
     ],

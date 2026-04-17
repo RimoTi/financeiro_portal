@@ -138,19 +138,29 @@ export const ConciliacaoSemVinculo = () => {
     };
 
     console.log("dados enviados:", conciliacao);
-    await vincularNota(conciliacao);
+    try {
+      await vincularNota(conciliacao);
 
 
-    const novaLista = pagamentosSemVinculo.filter(p =>
-      !pagamentosSelecionado.some(ps => ps.numAutorizacao === p.numAutorizacao)
-    );
+      const novaLista = pagamentosSemVinculo.filter(p =>
+        !pagamentosSelecionado.some(ps => ps.numAutorizacao === p.numAutorizacao)
+      );
 
-    setPagamentosSemVinculo(novaLista);
-    setPagamentosFiltrados(novaLista);
-    setNotasSelecionadas([]);
-    setPagamentosSelecionado([]);
-    toast.success("Sucesso!");
-    window.dispatchEvent(new CustomEvent("atualizarSidebar"));
+      setPagamentosSemVinculo(novaLista);
+      setPagamentosFiltrados(novaLista);
+      setNotasSelecionadas([]);
+      setPagamentosSelecionado([]);
+      toast.success("Sucesso!");
+      window.dispatchEvent(new CustomEvent("atualizarSidebar"));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+        const mensagem =
+        error?.response?.data ||
+        error?.response?.data?.message ||
+        "Erro ao processar"
+
+        toast.error(mensagem)
+    }
   };
 
   const selecionarNota = (nota: NotaFiscal) => {

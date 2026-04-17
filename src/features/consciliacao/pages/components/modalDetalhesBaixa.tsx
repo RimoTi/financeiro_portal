@@ -29,9 +29,7 @@ export const ModalDetalhesBaixa: React.FC<props> = ({
                 <div style={styles.body}>
                     <p>
                     <strong>Data:</strong>{" "}
-                    {modalDetalhesBaixaProps.dataMovimentacao.toLocaleDateString("pt-BR", {
-                        timeZone: "America/Sao_Paulo"
-                    })}
+                    {modalDetalhesBaixaProps.dataMovimentacao.toISOString().split("T")[0].split("-").reverse().join("/")}
                     </p>
                     <p><strong>Valor Total:</strong> {modalDetalhesBaixaProps.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
                     <p><strong>Total de Pagamentos:</strong> {modalDetalhesBaixaProps.totalPagamentos}</p>

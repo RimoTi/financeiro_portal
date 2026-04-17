@@ -116,6 +116,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
 
 
           </CNavItem>
+                    <CNavItem>
+            <Link to="/consciliacao/historico" className="nav-link">
+              📝 Histórico de Movimentações
+            </Link>
+          </CNavItem>
 
         </CNavGroup>
         <CNavItem>
