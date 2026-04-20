@@ -1,10 +1,11 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import Papa, { ParseResult } from "papaparse";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
 import { mapCsvToDto } from "../consciliacaoService";
 import { Pagamento } from "../types";
+import { CTooltip } from "@coreui/react";
 
 type CsvRow = Record<string, string>;
 
@@ -47,28 +48,28 @@ export const ImportCsvVendas: React.FC = () => {
   };
 
 
-const removerDuplicadas = (dados: Pagamento[]) => {
-  const map = new Map<string, Pagamento>();
+  const removerDuplicadas = (dados: Pagamento[]) => {
+    const map = new Map<string, Pagamento>();
 
-  dados.forEach(item => {
-    const existente = map.get(item.numAutorizacao);
+    dados.forEach(item => {
+      const existente = map.get(item.numAutorizacao);
 
-    if (!existente || item.parcela > existente.parcela) {
-      map.set(item.numAutorizacao, item);
-    }
-  });
+      if (!existente || item.parcela > existente.parcela) {
+        map.set(item.numAutorizacao, item);
+      }
+    });
 
-  return Array.from(map.values());
-};
+    return Array.from(map.values());
+  };
 
 
   const handleUpload = async () => {
-     const dados = mapCsvToDto(data);
-      const pagamentos = removerDuplicadas(dados);
-      
-      navigate("/consciliacao/semVinculo", {
-          state: { pagamentos }
-        }); // Redireciona para a página de lista após a importação
+    const dados = mapCsvToDto(data);
+    const pagamentos = removerDuplicadas(dados);
+
+    navigate("/consciliacao/semVinculo", {
+      state: { pagamentos }
+    }); // Redireciona para a página de lista após a importação
 
   };
 
@@ -78,7 +79,7 @@ const removerDuplicadas = (dados: Pagamento[]) => {
 
   return (
     <div style={styles.wrapper}>
-      <div style={styles.container}>       
+      <div style={styles.container}>
         <h2 style={styles.title}>Importar CSV Vendas Realizadas</h2>
 
         <div
@@ -121,9 +122,11 @@ const removerDuplicadas = (dados: Pagamento[]) => {
         )}
       </div>
       {data.length > 0 && (
-        <button style={styles.fab} onClick={handleUpload}>
-          ⬆ Importar
-        </button>
+        <CTooltip content="Importa os dados do CSV" placement="top">
+          <button style={styles.fab} onClick={handleUpload}>
+            ⬆ Importar
+          </button>
+        </CTooltip>
       )}
     </div>
   );

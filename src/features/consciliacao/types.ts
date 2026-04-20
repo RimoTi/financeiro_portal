@@ -1,10 +1,9 @@
-type ISODateString = string;
 
 export interface Pagamento  {
   id: number | null,
   concId: number | null,
   numEstabelecimento: string;
-  dataTransacao: ISODateString; // ISO date
+  dataTransacao: Date | null; // ISO date
   numTransacao: string;
   idVenda: string;
   bandeira: string;
@@ -20,7 +19,7 @@ export interface Pagamento  {
   indCreditoDebito: string;
   indCancelamentoVenda: string;
   numResumoVenda: string;
-  dataPrevistaLiquidacao: ISODateString; // ISO date
+  dataPrevistaLiquidacao: Date | null; // ISO date
   seuNumero: string;
   numOrdemPagamento: string;
   status: string;

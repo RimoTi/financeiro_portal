@@ -6,6 +6,8 @@ import { ModalGetNota } from "./components/modalGetNota";
 import { toast } from "react-toastify";
 import { useLocation } from "react-router-dom";
 import { useMemo } from "react";
+import { CTooltip } from '@coreui/react'
+import { ModalVincularPagamentoExistente } from "./components/modalVincPgtoExist";
 
 export const ConciliacaoSemVinculo = () => {
   const [pagamentosSemVinculo, setPagamentosSemVinculo] = useState<Pagamento[]>([]);
@@ -15,6 +17,8 @@ export const ConciliacaoSemVinculo = () => {
   const [loading, setLoading] = useState(false);
   const [modalGetNotaVisible, setModalGetNotasVisible] = useState(false);
   const location = useLocation();
+  const [modalVincPgtoExistVisible, setModalVincPgtoExistVisible] = useState(false);
+  const [pagamentoParaVincular, setPagamentoParaVincular] = useState<Pagamento | null>(null);
 
 
 
@@ -62,6 +66,12 @@ export const ConciliacaoSemVinculo = () => {
       prev.filter(p => p.numAutorizacao !== item.numAutorizacao));
   };
 
+  const handleVincularPagamentoExistente = (pagamento: Pagamento) => {
+    setPagamentoParaVincular(pagamento);
+    setModalVincPgtoExistVisible(true);
+  }
+
+
   // ✅ Remover (volta pra lista)
   const handleRemove = (item: Pagamento) => {
     setPagamentosSelecionado(prev =>
@@ -88,6 +98,13 @@ export const ConciliacaoSemVinculo = () => {
 
     setPagamentosFiltrados(filtered);
   };
+
+  const handleremoverPagamento = (pagamento: Pagamento) => {
+    const novaLista = pagamentosSemVinculo.filter(p => p.numAutorizacao !== pagamento.numAutorizacao);
+    setPagamentosSemVinculo(novaLista);
+    setPagamentosFiltrados(novaLista);
+  };
+
 
   const formatMoney = (value: number) =>
     value.toLocaleString("pt-BR", {
@@ -137,11 +154,9 @@ export const ConciliacaoSemVinculo = () => {
       notas: notasSelecionadas,
     };
 
-    console.log("dados enviados:", conciliacao);
+    //console.log("dados enviados:", conciliacao);
     try {
       await vincularNota(conciliacao);
-
-
       const novaLista = pagamentosSemVinculo.filter(p =>
         !pagamentosSelecionado.some(ps => ps.numAutorizacao === p.numAutorizacao)
       );
@@ -152,14 +167,14 @@ export const ConciliacaoSemVinculo = () => {
       setPagamentosSelecionado([]);
       toast.success("Sucesso!");
       window.dispatchEvent(new CustomEvent("atualizarSidebar"));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-        const mensagem =
+      const mensagem =
         error?.response?.data ||
         error?.response?.data?.message ||
         "Erro ao processar"
 
-        toast.error(mensagem)
+      toast.error(mensagem)
     }
   };
 
@@ -209,12 +224,24 @@ export const ConciliacaoSemVinculo = () => {
                   <p><strong>Data:</strong>{item.dataPagamento ? formatDate(item.dataPagamento.toString()) : "—"}</p>
                 </div>
 
-                <button
-                  style={styles.button}
-                  onClick={() => handleSelect(item)}
-                >
-                  Selecionar
-                </button>
+                <div style={styles.divFlex}>
+                  <CTooltip content="Juntar este pagamento com outros pagamentos ja vinculados" placement="top">
+                    <button
+                      style={{...styles.button, backgroundColor: "#059669"}} // verde
+                      onClick={() => handleVincularPagamentoExistente(item)}
+                    >
+                      Juntar
+                    </button>
+                  </CTooltip>
+                  <CTooltip content="Selecionar pagamento para vincular com nota fiscal" placement="top">
+                    <button
+                      style={styles.button}
+                      onClick={() => handleSelect(item)}
+                    >
+                      Selecionar
+                    </button>
+                  </CTooltip>
+                </div>
               </div>
             ))}
           </div>
@@ -224,12 +251,14 @@ export const ConciliacaoSemVinculo = () => {
       {/* LATERAL */}
       <div style={styles.side}>
         <div style={styles.cardSide}>
-          <button
-            style={styles.btnOpenModal}
-            onClick={() => setModalGetNotasVisible(true)}
-          >
-            + Selecionar Notas
-          </button>
+          <CTooltip content="Adicionar nota fiscal para vincular com os pagamentos selecionados" placement="top">
+            <button
+              style={styles.btnOpenModal}
+              onClick={() => setModalGetNotasVisible(true)}
+            >
+              + Selecionar Notas
+            </button>
+          </CTooltip>
           <h4 style={styles.sectionTitle}>📌 Pagamentos Selecionados</h4>
 
           {pagamentosSelecionado.length === 0 && (
@@ -310,6 +339,14 @@ export const ConciliacaoSemVinculo = () => {
           visible={modalGetNotaVisible}
         />
       )}
+      {modalVincPgtoExistVisible && pagamentoParaVincular &&(
+        <ModalVincularPagamentoExistente
+          onClose={() => setModalVincPgtoExistVisible(false)}
+          visible={modalVincPgtoExistVisible}
+          pagamento={pagamentoParaVincular}
+          removerPagamento={handleremoverPagamento}
+        />
+      )}
 
     </div>
   );
@@ -323,6 +360,10 @@ const styles = {
     width: "75%",
   },
 
+  divFlex: {
+    display: "flex",
+    justifyContent: "space-between",
+  },
   fab: {
     position: "fixed",
     bottom: "30px",
@@ -444,6 +485,9 @@ const styles = {
     padding: "10px",
     borderRadius: "8px",
     cursor: "pointer",
+    width: "100px",
+    fontWeight: "500",
+    transition: "0.2s",
   },
 
   selectedItem: {

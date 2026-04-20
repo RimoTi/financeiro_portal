@@ -1,9 +1,10 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import Papa, { ParseResult } from "papaparse";
 import { mapCsvToDto, importarCsv } from "../consciliacaoService";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
+import { CTooltip } from "@coreui/react";
 
 type CsvRow = Record<string, string>;
 
@@ -75,7 +76,7 @@ export const ImportCsvPagamentos: React.FC = () => {
 
   return (
     <div style={styles.wrapper}>
-      <div style={styles.container}>       
+      <div style={styles.container}>
         <h2 style={styles.title}>Importar CSV Pagamentos Recebidos</h2>
 
         <div
@@ -119,9 +120,11 @@ export const ImportCsvPagamentos: React.FC = () => {
 
       </div>
       {data.length > 0 && (
-        <button style={styles.fab} onClick={handleUpload}>
-          ⬆ Importar
-        </button>
+        <CTooltip content="Clique para importar os pagamentos para o sistema" placement="top">
+          <button style={styles.fab} onClick={handleUpload}>
+            ⬆ Importar
+          </button>
+        </CTooltip>
       )}
     </div>
   );

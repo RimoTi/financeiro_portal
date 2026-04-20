@@ -1,23 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
-import { getNota } from "@features/consciliacao/consciliacaoService";
-import { NotaFiscal, ApiResquestGetNota } from "@features/consciliacao/types";
+import { getConsiliacao, vincularExistente} from "@features/consciliacao/consciliacaoService";
+import {  ApiResquestGetNota, Autorizacao, Pagamento } from "@features/consciliacao/types";
 import { toast } from "react-toastify";
 
 
 interface Props {
     visible: boolean;
     onClose: () => void;
-    selecionarNota: (notas: NotaFiscal) => void;
+    pagamento: Pagamento;
+    removerPagamento: (pagamento: Pagamento) => void;
 }
 
-export const ModalGetNota: React.FC<Props> = ({
+export const ModalVincularPagamentoExistente: React.FC<Props> = ({
     visible,
     onClose,
-    selecionarNota,
+    pagamento,
+    removerPagamento
 }) => {
 
     const [apiResquestGetNota, setApiRequestGetNota] = useState<ApiResquestGetNota>({ numNf: 0, chaveAcesso: "" });
-    const [nota, setNota] = useState<NotaFiscal | null>(null);
     const [loading, setLoading] = useState(false);
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -28,16 +29,26 @@ export const ModalGetNota: React.FC<Props> = ({
 
 
     const fetchNota = async () => {
-        setNota(null);
         setLoading(true);
         try {
-            const data = await getNota(apiResquestGetNota);
-            setNota(data);
+            const data = await getConsiliacao(apiResquestGetNota);
             //caso não queria mostrar o resultado na tela, apenas selecionar a nota e fechar o modal, descomentar as linhas abaixo e comentar as linhas acima
-            if (data) {
-                selecionarNota(data);
-                setNota(null);
-                inputRef.current?.focus();
+            if (data && data.id) {
+                console.log("Pagamento", pagamento);
+                const autorizacao: Autorizacao = {
+                    id: null,
+                    concId: data.id,
+                    pagamentoId: pagamento.id,
+                    numAutorizacao: pagamento.numAutorizacao,
+                    totalParc: pagamento.totalParcela,
+                    vlrTotal: pagamento.valorParcelaLiquido,
+                    DataUltParc: pagamento.dataPagamento
+                }
+
+                vincularExistente(data.id, autorizacao);
+                removerPagamento(pagamento);
+                setApiRequestGetNota({ numNf: 0, chaveAcesso: "" });
+                onClose();
             }
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,14 +65,6 @@ export const ModalGetNota: React.FC<Props> = ({
         }
     };
 
-    const handelAdicionarNota = () => {
-        if (nota) {
-            selecionarNota(nota);
-            setNota(null);
-            inputRef.current?.focus();
-        }
-    };
-
 
 
     if (!visible) return null;
@@ -69,11 +72,12 @@ export const ModalGetNota: React.FC<Props> = ({
     return (
         <div style={styles.overlay}>
             <div style={styles.modal}>
-                <h2>🔍 Selecionar Nota</h2>
+                <h2>🔍 Buscar Conciliação</h2>
 
                 {/* INPUTS */}
                 <div>
                     <input
+                        ref={inputRef}
                         placeholder="Número da nota..."
                         value={apiResquestGetNota.numNf || ""}
                         onKeyDown={(e) => {
@@ -90,8 +94,8 @@ export const ModalGetNota: React.FC<Props> = ({
                         style={styles.input}
                     />
 
-                    <input
-                        ref={inputRef}
+                   {/* <input
+                        
                         placeholder="Chave de acesso..."
                         value={apiResquestGetNota.chaveAcesso || ""}
                         onKeyDown={(e) => {
@@ -106,10 +110,13 @@ export const ModalGetNota: React.FC<Props> = ({
                             })
                         }
                         style={styles.input}
-                    />
+                    />*/}
+                    <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "10px" }}>
+                        * Para vincular a autorização {pagamento?.numAutorizacao}, basta informar o número da nota.
+                    </div>
 
                     <button style={styles.btnBuscar} onClick={fetchNota} disabled={loading}>
-                        {loading ? "Buscando..." : "Buscar"}
+                        {loading ? "Vinculando..." : "Vincular"}
                     </button>
 
                     <button
@@ -121,36 +128,6 @@ export const ModalGetNota: React.FC<Props> = ({
                     </button>
                 </div>
 
-                {/* RESULTADO */}
-                <div style={styles.lista}>
-                    {nota && (
-                        <div style={styles.cardNota}>
-                            <div style={styles.cardContent}>
-                                <span style={styles.badge}>NF {nota.numNf}</span>
-
-                                <div style={styles.nome}>{nota.nome}</div>
-
-                                <div style={styles.valor}>
-                                    {nota.vlrTotal
-                                        ? nota.vlrTotal.toLocaleString("pt-BR", {
-                                            style: "currency",
-                                            currency: "BRL",
-                                        })
-                                        : "N/A"}
-                                </div>
-                            </div>
-
-                            <button
-                                style={styles.btnAdd}
-                                onClick={handelAdicionarNota}
-                                disabled={loading}
-                            >
-                                + Adicionar
-                            </button>
-
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

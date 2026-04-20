@@ -1,6 +1,6 @@
 import api from '../../services/api';
 import axios from "axios";
-import { Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento} from './types';
+import { Autorizacao, Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento} from './types';
 import { ApiResquestGetNota } from './types';
 
 
@@ -52,8 +52,8 @@ const toNumber = (value: string): number => {
   );
 };
 
-const toDate = (value: string): string => {
-  if (!value) return "";
+const toDate = (value: string): Date => {
+  if (!value) return new Date();
 
   // "02/02/2026 13:48"
   const [datePart, timePart] = value.split(" ");
@@ -61,7 +61,7 @@ const toDate = (value: string): string => {
 
   const iso = `${year}-${month}-${day}${timePart ? `T${timePart}:00` : "T00:00:00"}`;
 
-  return new Date(iso).toISOString();
+  return new Date(iso);
 };
 
 export const mapCsvToDto = (
@@ -89,11 +89,11 @@ export const mapCsvToDto = (
       indCreditoDebito: item["Indicador Crédito/Débito"],
       indCancelamentoVenda: item["Indicador de cancelamento da venda"],
       numResumoVenda: item["Nº resumo da venda"],
-      dataPrevistaLiquidacao: toDate(item["Data prevista de liquidação"]),
+      dataPrevistaLiquidacao: item["Data prevista de liquidação"] ? toDate(item["Data prevista de liquidação"]) : toDate(item["Data do pagamento"]),
       seuNumero: item["Seu número"],
       numOrdemPagamento: item["Nº ordem de pagamento"],
       status: item["Status"],
-      dataPagamento: item["Data prevista de liquidação"] ? new Date(item["Data prevista de liquidação"]) : new Date(item["Data do pagamento"]),
+      dataPagamento: item["Data do pagamento"] ? toDate(item["Data do pagamento"]) : toDate(item["Data prevista de liquidação"]),
       numBanco: item["Nº do banco"],
       numAgencia: item["Nº da agência"],
       numConta: item["Nº da conta"],
@@ -219,5 +219,24 @@ export async function getHistoricoMovimentacoes(numNf: number): Promise<INotaFis
       }
     );
     return response.data || [];
+}
+
+export async function getConsiliacao(data: ApiResquestGetNota): Promise<Conciliacao> {
+    const response = await api.get<Conciliacao>(
+      "/Conciliacao/ObterPorNota",{
+      params: { 
+        numNf: data.numNf || undefined, 
+        chave: data.chaveAcesso || undefined 
+      }
+    }
+    );
+    return response.data;
+}
+
+export async function vincularExistente(concilId: number, autorizacao: Autorizacao): Promise<string>   {
+    const response = await api.post<string>(
+      `/Conciliacao/AdicionarAutorizacao?conciliacaoId=${concilId}`,  autorizacao 
+    );
+    return response.data;
 }
 

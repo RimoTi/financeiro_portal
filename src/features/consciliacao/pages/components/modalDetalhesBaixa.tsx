@@ -1,3 +1,5 @@
+import { CTooltip } from "@coreui/react";
+
 type ModalDetalhesBaixaProps = {
     dataMovimentacao: Date;
     valorTotal: number;
@@ -28,20 +30,24 @@ export const ModalDetalhesBaixa: React.FC<props> = ({
 
                 <div style={styles.body}>
                     <p>
-                    <strong>Data:</strong>{" "}
-                    {modalDetalhesBaixaProps.dataMovimentacao.toISOString().split("T")[0].split("-").reverse().join("/")}
+                        <strong>Data:</strong>{" "}
+                        {modalDetalhesBaixaProps.dataMovimentacao.toISOString().split("T")[0].split("-").reverse().join("/")}
                     </p>
                     <p><strong>Valor Total:</strong> {modalDetalhesBaixaProps.valorTotal.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
                     <p><strong>Total de Pagamentos:</strong> {modalDetalhesBaixaProps.totalPagamentos}</p>
                 </div>
 
                 <div style={styles.footer}>
-                    <button style={styles.primaryButton} onClick={baixarTitulos}>
-                        Baixar Títulos
-                    </button>
-                    <button style={styles.secondaryButton} onClick={onClose}>
-                        Fechar
-                    </button>
+                    <CTooltip content="Confirma a baixa dos títulos selecionados" placement="top">
+                        <button style={styles.primaryButton} onClick={baixarTitulos}>
+                            Baixar Títulos
+                        </button>
+                    </CTooltip>
+                    <CTooltip content="Fecha esta janela sem realizar a baixa" placement="top">
+                        <button style={styles.secondaryButton} onClick={onClose}>
+                            Fechar
+                        </button>
+                    </CTooltip>
                 </div>
             </div>
         </div>

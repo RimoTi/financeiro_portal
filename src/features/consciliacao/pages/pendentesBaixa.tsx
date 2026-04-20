@@ -134,7 +134,7 @@ export const PendentesBaixa = () => {
 
                                     <p>
                                         <strong>Data:</strong>{" "}
-                                        {formatDate(item.dataTransacao)}
+                                        {formatDate(item.dataTransacao?.toString() || "")}
                                     </p>
                                 </div>
                              
