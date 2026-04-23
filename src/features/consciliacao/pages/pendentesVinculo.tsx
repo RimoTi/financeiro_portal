@@ -86,14 +86,14 @@ export const ConciliacaoSemVinculo = () => {
 
     if (!value) {
       setPagamentosFiltrados(pagamentosSemVinculo.filter(
-        p => !pagamentosSelecionado.some(sel => sel.id === p.id)
+        p => !pagamentosSelecionado.some(sel => sel.numAutorizacao === p.numAutorizacao)
       ));
       return;
     }
 
     const filtered = pagamentosSemVinculo.filter(item =>
       item.numAutorizacao.includes(value) &&
-      !pagamentosSelecionado.some(sel => sel.id === item.id)
+      !pagamentosSelecionado.some(sel => sel.numAutorizacao === item.numAutorizacao)
     );
 
     setPagamentosFiltrados(filtered);
