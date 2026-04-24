@@ -59,7 +59,41 @@ export const ImportCsvEcommerce: React.FC = () => {
                 header: true,
                 skipEmptyLines: true,
                 complete: (results: ParseResult<CsvRow>) => {
-                    setData(results.data);
+
+                    const linhasValidas = results.data.filter((row) =>
+                        Object.values(row).some((valor) =>
+                            String(valor).trim() !== ""
+                        )
+                    );
+
+                    const agrupado: Record<string, CsvRow> = {};
+
+                    linhasValidas.forEach((row) => {
+                        const nota = String(row["Nota Fiscal"]).trim();
+
+                        if (!nota) return;
+
+                        const valor = parseFloat(
+                            String(row["Valor Liquido"])
+                                .replace(/\./g, "")
+                                .replace(",", ".")
+                        ) || 0;
+
+                        if (agrupado[nota]) {
+                            const atual = parseCurrency(
+                                agrupado[nota]["Valor Liquido"]
+                            );
+
+                            agrupado[nota]["Valor Liquido"] = (atual + valor).toFixed(2).replace(".", ",");
+                        } else {
+                            agrupado[nota] = {
+                                ...row,
+                                "Valor Liquido": (valor).toFixed(2).replace(".", ",")
+                            };
+                        }
+                    });
+
+                    setData(Object.values(agrupado));
                 },
             });
         } catch (error) {
@@ -68,6 +102,13 @@ export const ImportCsvEcommerce: React.FC = () => {
         } finally {
             setLoading(false);
         };
+    };
+
+    const sumValorLiquido = (data: CsvRow[]): number => {
+        return data.reduce((total, row) => {
+            const valor = parseCurrency(row["Valor Liquido"] ?? "0");
+            return total + valor;
+        }, 0);
     };
 
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -82,16 +123,16 @@ export const ImportCsvEcommerce: React.FC = () => {
     };
 
     const parseCurrency = (value: string): number => {
-  if (!value) return 0;
+        if (!value) return 0;
 
-  return Number(
-    value
-      .replace(/\s/g, "")      // remove espaços
-      .replace("R$", "")       // remove moeda
-      .replace(/\./g, "")      // remove milhar
-      .replace(",", ".")       // troca decimal
-  );
-};
+        return Number(
+            value
+                .replace(/\s/g, "")      // remove espaços
+                .replace("R$", "")       // remove moeda
+                .replace(/\./g, "")      // remove milhar
+                .replace(",", ".")       // troca decimal
+        );
+    };
 
     const handleUpload = async () => {
         if (!validaNotasDuplicadas(data)) return;
@@ -111,8 +152,8 @@ export const ImportCsvEcommerce: React.FC = () => {
                 setLoading(true);
                 const response = await importarCsv(dtoArray);
                 navigate("/consciliacao/retorno", {
-                state: response
-            });
+                    state: response
+                });
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (error: string | any) {
                 toast.error(error);
@@ -157,7 +198,7 @@ export const ImportCsvEcommerce: React.FC = () => {
                         />
                     </div>
 
-                    {fileName && <p style={styles.fileName}>Arquivo: {fileName}</p>}
+                    {fileName && <p style={styles.fileName}>Arquivo: {fileName}  -   Valor total: {sumValorLiquido(data).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>}
 
                     {data.length > 0 && (
                         <div style={styles.tableContainer}>
@@ -170,7 +211,7 @@ export const ImportCsvEcommerce: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {data.slice(0, 10).map((row, i) => (
+                                    {data.map((row, i) => (
                                         <tr key={i}>
                                             {Object.values(row).map((val: string, j) => (
                                                 <td key={j} style={styles.td}>{val}</td>

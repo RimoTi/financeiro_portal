@@ -23,7 +23,7 @@ export const ConciliacaoSemVinculo = () => {
 
 
   const pagamentos = useMemo(() => {
-    return location.state?.pagamentos || [];
+    return location.state?.pagamentosFiltrados || [];
   }, [location.state]);
 
   useEffect(() => {
