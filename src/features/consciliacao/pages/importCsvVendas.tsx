@@ -3,7 +3,7 @@ import Papa, { ParseResult } from "papaparse";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
-import { mapCsvToDto } from "../consciliacaoService";
+import { mapCsvToDto, TestarAutorizacaoExistente } from "../consciliacaoService";
 import { Pagamento } from "../types";
 import { CTooltip } from "@coreui/react";
 
@@ -50,7 +50,6 @@ export const ImportCsvVendas: React.FC = () => {
 
   const removerDuplicadas = (dados: Pagamento[]) => {
     const map = new Map<string, Pagamento>();
-
     dados.forEach(item => {
       const existente = map.get(item.numAutorizacao);
 
@@ -66,10 +65,27 @@ export const ImportCsvVendas: React.FC = () => {
   const handleUpload = async () => {
     const dados = mapCsvToDto(data);
     const pagamentos = removerDuplicadas(dados);
+    //enviar para o backend para verificar quais já existem e quais não existem
+    const aut: string[] = pagamentos.map(p => p.numAutorizacao);
+    try {
+      const response = await TestarAutorizacaoExistente(aut);
+      const autorizacoesSemVinculo = response;
+      const pagamentosFiltrados = pagamentos.filter(p => autorizacoesSemVinculo.includes(p.numAutorizacao));
+      if (pagamentosFiltrados.length === 0) {
+        toast.info("Todos os registros do CSV já estão vinculados.");
+        return;
+      }
+      navigate("/consciliacao/semVinculo", {
+        state: { pagamentosFiltrados }
+      });
+    } catch (error) {
+      console.error("Erro ao verificar autorizações:", error);
+      toast.error("Erro ao verificar autorizações");
+      return;
+    }
 
-    navigate("/consciliacao/semVinculo", {
-      state: { pagamentos }
-    }); // Redireciona para a página de lista após a importação
+
+    // Redireciona para a página de lista após a importação
 
   };
 

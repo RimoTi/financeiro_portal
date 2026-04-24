@@ -1,6 +1,6 @@
 import api from '../../services/api';
 import axios from "axios";
-import { Autorizacao, Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento} from './types';
+import { Autorizacao, Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento } from './types';
 import { ApiResquestGetNota } from './types';
 
 
@@ -8,6 +8,8 @@ import { ApiResquestGetNota } from './types';
 type ApiResponse = {
   message: string;
 };
+
+type ListaAutorizacaoResponse = string[];
 
 
 // 🔥 função 3
@@ -22,19 +24,19 @@ export async function importarCsv(data: Pagamento[]): Promise<string> {
     return response.data.message || "Importação realizada com sucesso!";
   } catch (error: unknown) {
 
-  if (axios.isAxiosError(error)) {
-    return Promise.reject(
-      error.response?.data?.message ||
-      error.response?.data ||
-      error.message
-    );
-  }
+    if (axios.isAxiosError(error)) {
+      return Promise.reject(
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message
+      );
+    }
 
-  if (error instanceof Error) {
-    return Promise.reject(error.message);
-  }
+    if (error instanceof Error) {
+      return Promise.reject(error.message);
+    }
 
-  return Promise.reject("Erro ao importar CSV");
+    return Promise.reject("Erro ao importar CSV");
 
   }
 }
@@ -108,6 +110,22 @@ export const mapCsvToDto = (
     }));
 };
 
+export async function TestarAutorizacaoExistente(numAutorizacoes: string[]): Promise<string[]> {
+  try {
+    const response = await api.post<ListaAutorizacaoResponse>(
+      "/Conciliacao/SemPreVinculo",
+      numAutorizacoes
+    );
+
+    return response.data || [];
+
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.log(error.response?.data?.message || "Erro ao verificar autorização");
+    }
+    throw new Error("Erro ao verificar autorização");
+  }
+}
 
 export async function getNotaMock(numNf: number): Promise<NotaFiscal> {
   await new Promise(res => setTimeout(res, 500));
@@ -189,54 +207,54 @@ export async function getTransacoesPendentesBaixa(): Promise<Pagamento[]> {
 }
 
 export async function getNota(data: ApiResquestGetNota): Promise<NotaFiscal> {
-    const response = await api.get<NotaFiscal>(
-      "/Conciliacao/BuscarNota",{
-      params: { 
-        // Se numNf for null, o axios não coloca numNf= na URL
-        numNf: data.numNf || undefined, 
-        chave: data.chaveAcesso || undefined 
-      }
+  const response = await api.get<NotaFiscal>(
+    "/Conciliacao/BuscarNota", {
+    params: {
+      // Se numNf for null, o axios não coloca numNf= na URL
+      numNf: data.numNf || undefined,
+      chave: data.chaveAcesso || undefined
     }
-    );
-    return response.data;
+  }
+  );
+  return response.data;
 }
 
 export async function vincularNota(transacao: Conciliacao): Promise<string> {
 
-    const response = await api.post<string>(
-      `/Conciliacao/Criar`, transacao
-    );
-    return response.data;
+  const response = await api.post<string>(
+    `/Conciliacao/Criar`, transacao
+  );
+  return response.data;
 
 }
 
 export async function getHistoricoMovimentacoes(numNf: number): Promise<INotaFiscalHistorico> {
 
-    const response = await api.get<INotaFiscalHistorico>(
-      "/Conciliacao/HistoricoNf",
-      {
-        params: { numNf }
-      }
-    );
-    return response.data || [];
+  const response = await api.get<INotaFiscalHistorico>(
+    "/Conciliacao/HistoricoNf",
+    {
+      params: { numNf }
+    }
+  );
+  return response.data || [];
 }
 
 export async function getConsiliacao(data: ApiResquestGetNota): Promise<Conciliacao> {
-    const response = await api.get<Conciliacao>(
-      "/Conciliacao/ObterPorNota",{
-      params: { 
-        numNf: data.numNf || undefined, 
-        chave: data.chaveAcesso || undefined 
-      }
+  const response = await api.get<Conciliacao>(
+    "/Conciliacao/ObterPorNota", {
+    params: {
+      numNf: data.numNf || undefined,
+      chave: data.chaveAcesso || undefined
     }
-    );
-    return response.data;
+  }
+  );
+  return response.data;
 }
 
-export async function vincularExistente(concilId: number, autorizacao: Autorizacao): Promise<string>   {
-    const response = await api.post<string>(
-      `/Conciliacao/AdicionarAutorizacao?conciliacaoId=${concilId}`,  autorizacao 
-    );
-    return response.data;
+export async function vincularExistente(concilId: number, autorizacao: Autorizacao): Promise<string> {
+  const response = await api.post<string>(
+    `/Conciliacao/AdicionarAutorizacao?conciliacaoId=${concilId}`, autorizacao
+  );
+  return response.data;
 }
 
