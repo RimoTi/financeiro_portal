@@ -126,7 +126,7 @@ export const ConciliacaoSemVinculo = () => {
       concId: null,
       numAutorizacao: p.numAutorizacao,
       totalParc: p.totalParcela,
-      DataUltParc: p.dataPagamento,
+      DataUltParc: p.dataPrevistaLiquidacao,
       vlrTotal: p.valorParcelaLiquido,
       pagamentoId: p.id
     }));

@@ -63,7 +63,7 @@ export const ImportCsvVendas: React.FC = () => {
 
 
   const handleUpload = async () => {
-    const dados = mapCsvToDto(data);
+    const dados = mapCsvToDto(false, data);
     const pagamentos = removerDuplicadas(dados);
     //enviar para o backend para verificar quais já existem e quais não existem
     const aut: string[] = pagamentos.map(p => p.numAutorizacao);

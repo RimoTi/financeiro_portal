@@ -66,7 +66,9 @@ const toDate = (value: string): Date => {
   return new Date(iso);
 };
 
+
 export const mapCsvToDto = (
+  pgto: boolean,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: Record<string, any>[]
 ): Pagamento[] => {
@@ -91,11 +93,11 @@ export const mapCsvToDto = (
       indCreditoDebito: item["Indicador Crédito/Débito"],
       indCancelamentoVenda: item["Indicador de cancelamento da venda"],
       numResumoVenda: item["Nº resumo da venda"],
-      dataPrevistaLiquidacao: item["Data prevista de liquidação"] ? toDate(item["Data prevista de liquidação"]) : toDate(item["Data do pagamento"]),
+      dataPrevistaLiquidacao: pgto ? null : item["Data prevista de liquidação"] ? toDate(item["Data prevista de liquidação"]) : null,
       seuNumero: item["Seu número"],
       numOrdemPagamento: item["Nº ordem de pagamento"],
       status: item["Status"],
-      dataPagamento: item["Data do pagamento"] ? toDate(item["Data do pagamento"]) : toDate(item["Data prevista de liquidação"]),
+      dataPagamento: item["Data do pagamento"] ? toDate(item["Data do pagamento"]) : null,
       numBanco: item["Nº do banco"],
       numAgencia: item["Nº da agência"],
       numConta: item["Nº da conta"],

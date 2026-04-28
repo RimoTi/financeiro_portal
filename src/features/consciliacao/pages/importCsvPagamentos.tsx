@@ -49,7 +49,7 @@ export const ImportCsvPagamentos: React.FC = () => {
   const handleUpload = async () => {
     try {
 
-      const dtoArray = mapCsvToDto(data);
+      const dtoArray = mapCsvToDto(true, data);
       console.log("Dados para importação:", dtoArray);
       try {
         setLoading(true);
