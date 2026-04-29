@@ -221,7 +221,7 @@ export const ConciliacaoSemVinculo = () => {
                   <p><strong>Parcela:</strong> {item.parcela}/{item.totalParcela}</p>
                   <p><strong>Valor:</strong> {formatMoney(item.valorParcelaLiquido)}</p>
                   <p><strong>Total:</strong> {formatMoney(item.totalPlanoVenda)}</p>
-                  <p><strong>Data:</strong>{item.dataPagamento ? formatDate(item.dataPagamento.toString()) : "—"}</p>
+                  <p><strong>Data:</strong>{item.dataPrevistaLiquidacao ? formatDate(item.dataPrevistaLiquidacao.toString()) : "—"}</p>
                 </div>
 
                 <div style={styles.divFlex}>
