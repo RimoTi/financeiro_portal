@@ -62,6 +62,7 @@ export const PendentesBaixa = () => {
         new Date(date).toLocaleString("pt-BR");
 
     const handleUpload = async () => {
+        setLoading(true)
         try {
 
             const ids: number[] = pendentesBaixa
@@ -76,6 +77,8 @@ export const PendentesBaixa = () => {
         } catch (error) {
             toast.error("Erro ao baixar títulos");
             console.error("Erro ao baixar títulos:", error);
+        }finally{
+            setLoading(false)
         }
     }
 

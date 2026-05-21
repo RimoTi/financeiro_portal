@@ -1,4 +1,5 @@
 import { CTooltip } from "@coreui/react";
+import { useState } from "react";
 
 type ModalDetalhesBaixaProps = {
     dataMovimentacao: Date;
@@ -10,7 +11,7 @@ interface props {
     visible: boolean;
     onClose: () => void;
     modalDetalhesBaixaProps: ModalDetalhesBaixaProps;
-    baixarTitulos: () => void;
+    baixarTitulos: () => Promise<void> | void; // Aceita funções assíncronas
 }
 
 export const ModalDetalhesBaixa: React.FC<props> = ({
@@ -19,6 +20,20 @@ export const ModalDetalhesBaixa: React.FC<props> = ({
     modalDetalhesBaixaProps,
     baixarTitulos
 }) => {
+    const [buttonEnabled, setButtonEnabled] = useState(true); 
+
+    // Transformamos em async para esperar a API processar a baixa
+    const handleUpload = async () => {
+        try {
+            setButtonEnabled(false); // Trava o botão para evitar clique duplo
+            await baixarTitulos();   // Espera o processo terminar de verdade
+        } catch (error) {
+            console.error("Erro ao baixar títulos:", error);
+        } finally {
+            setButtonEnabled(true);  // Destrava quando tudo terminar
+        }
+    }
+
     if (!visible) return null;
 
     return (
@@ -39,12 +54,22 @@ export const ModalDetalhesBaixa: React.FC<props> = ({
 
                 <div style={styles.footer}>
                     <CTooltip content="Confirma a baixa dos títulos selecionados" placement="top">
-                        <button style={styles.primaryButton} onClick={baixarTitulos}>
-                            Baixar Títulos
+                        {/* 1. Usamos a propriedade nativa disabled */}
+                        {/* 2. Alteramos o estilo dinamicamente para dar feedback visual (opacidade) */}
+                        <button 
+                            style={{
+                                ...styles.primaryButton, 
+                                opacity: buttonEnabled ? 1 : 0.6,
+                                cursor: buttonEnabled ? "pointer" : "not-allowed"
+                            }} 
+                            disabled={!buttonEnabled} 
+                            onClick={handleUpload}
+                        >
+                            {buttonEnabled ? "Baixar Títulos" : "Processando..."}
                         </button>
                     </CTooltip>
                     <CTooltip content="Fecha esta janela sem realizar a baixa" placement="top">
-                        <button style={styles.secondaryButton} onClick={onClose}>
+                        <button style={styles.secondaryButton} onClick={onClose} disabled={!buttonEnabled}>
                             Fechar
                         </button>
                     </CTooltip>
@@ -78,7 +103,6 @@ const styles: { [key: string]: React.CSSProperties } = {
         display: "flex",
         flexDirection: "column",
         gap: "16px",
-        animation: "fadeIn 0.2s ease-in-out",
     },
 
     header: {
@@ -111,8 +135,8 @@ const styles: { [key: string]: React.CSSProperties } = {
         border: "none",
         padding: "8px 14px",
         borderRadius: "8px",
-        cursor: "pointer",
         fontWeight: 500,
+        transition: "opacity 0.2s ease-in-out",
     },
 
     secondaryButton: {
