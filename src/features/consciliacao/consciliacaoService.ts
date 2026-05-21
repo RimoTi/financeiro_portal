@@ -181,6 +181,19 @@ export async function baixarTitulosPendente(data: number[], dataBaixa: string): 
   }
 }
 
+export async function removerPagamento(id: number): Promise<string> {
+  try {
+    const response = await api.delete<string>(`/Conciliacao/RemoverPagamento/${id}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError<ApiResponse>(error)) {
+      console.log(error.response?.data?.message || "Erro ao remover pagamento");
+    }
+    throw new Error("Erro ao remover pagamento");
+  }
+}
+
+
 export async function getTransacoesSemVinculo(): Promise<Pagamento[]> {
   try {
     const response = await api.get<Pagamento[]>(

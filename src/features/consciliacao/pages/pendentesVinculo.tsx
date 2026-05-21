@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Pagamento, NotaFiscal, Conciliacao, Autorizacao } from "@features/consciliacao/types";
-import { getTransacoesSemVinculo, vincularNota } from "@features/consciliacao/consciliacaoService";
+import { getTransacoesSemVinculo, vincularNota, removerPagamento } from "@features/consciliacao/consciliacaoService";
 import { Spinner } from "@components/spinner";
 import { ModalGetNota } from "./components/modalGetNota";
 import { toast } from "react-toastify";
@@ -71,285 +71,305 @@ export const ConciliacaoSemVinculo = () => {
     setModalVincPgtoExistVisible(true);
   }
 
-
-  // ✅ Remover (volta pra lista)
-  const handleRemove = (item: Pagamento) => {
-    setPagamentosSelecionado(prev =>
-      prev.filter(p => p.numAutorizacao !== item.numAutorizacao)
-    );
-
-    setPagamentosFiltrados(prev => [...prev, item]);
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-
-    if (!value) {
-      setPagamentosFiltrados(pagamentosSemVinculo.filter(
-        p => !pagamentosSelecionado.some(sel => sel.numAutorizacao === p.numAutorizacao)
-      ));
-      return;
-    }
-
-    const filtered = pagamentosSemVinculo.filter(item =>
-      item.numAutorizacao.includes(value) &&
-      !pagamentosSelecionado.some(sel => sel.numAutorizacao === item.numAutorizacao)
-    );
-
-    setPagamentosFiltrados(filtered);
-  };
-
-  const handleremoverPagamento = (pagamento: Pagamento) => {
+  //remove o pagamento que não deve ser vinculado e atualiza a lista
+  const handleDeletarPagamento = (pagamento: Pagamento) => async () => {
+    const msg = await removerPagamento(pagamento.id ?? 0);
     const novaLista = pagamentosSemVinculo.filter(p => p.numAutorizacao !== pagamento.numAutorizacao);
     setPagamentosSemVinculo(novaLista);
     setPagamentosFiltrados(novaLista);
+    window.dispatchEvent(new CustomEvent("atualizarSidebar"));
+    toast.success(msg);
   };
 
 
-  const formatMoney = (value: number) =>
-    value.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+// ✅ Remover (volta pra lista)
+const handleRemove = (item: Pagamento) => {
+  setPagamentosSelecionado(prev =>
+    prev.filter(p => p.numAutorizacao !== item.numAutorizacao)
+  );
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("pt-BR");
+  setPagamentosFiltrados(prev => [...prev, item]);
+};
 
-  const fecharModal = () => {
-    setModalGetNotasVisible(false);
+const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+
+  if (!value) {
+    setPagamentosFiltrados(pagamentosSemVinculo.filter(
+      p => !pagamentosSelecionado.some(sel => sel.numAutorizacao === p.numAutorizacao)
+    ));
+    return;
   }
 
-  const handleUpload = async () => {
+  const filtered = pagamentosSemVinculo.filter(item =>
+    item.numAutorizacao.includes(value) &&
+    !pagamentosSelecionado.some(sel => sel.numAutorizacao === item.numAutorizacao)
+  );
 
-    const autoriz: Autorizacao[] = pagamentosSelecionado.map(p => ({
-      id: null,
-      concId: null,
-      numAutorizacao: p.numAutorizacao,
-      totalParc: p.totalParcela,
-      DataUltParc: p.dataPrevistaLiquidacao,
-      vlrTotal: p.valorParcelaLiquido,
-      pagamentoId: p.id
-    }));
+  setPagamentosFiltrados(filtered);
+};
 
-    const maiorData = autoriz
-      .map(a => new Date(a.DataUltParc || Date.now.toString()))
-      .reduce((max, atual) => (atual > max ? atual : max));
+const handleRemoverPagamento = (pagamento: Pagamento) => {
+  const novaLista = pagamentosSemVinculo.filter(p => p.numAutorizacao !== pagamento.numAutorizacao);
+  setPagamentosSemVinculo(novaLista);
+  setPagamentosFiltrados(novaLista);
+};
 
-    const conciliacao: Conciliacao = {
-      id: null,
-      autorizacoes: autoriz,
-      DataUltParc: maiorData,
-      Finalizada: 0,
-      totalAutoriz: autoriz.length,
-      totalNotas: notasSelecionadas.length,
-      vlrAbNotas: notasSelecionadas.reduce(
-        (soma, n) => soma + (n.vlrAb || 0),
-        0
-      ),
-      vlrTotalAutoriz: pagamentosSelecionado.reduce(
-        (soma, p) => soma + (p.valorParcelaLiquido || 0),
-        0
-      ),
 
-      notas: notasSelecionadas,
-    };
+const formatMoney = (value: number) =>
+  value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 
-    //console.log("dados enviados:", conciliacao);
-    try {
-      await vincularNota(conciliacao);
-      const novaLista = pagamentosSemVinculo.filter(p =>
-        !pagamentosSelecionado.some(ps => ps.numAutorizacao === p.numAutorizacao)
-      );
+const formatDate = (date: string) =>
+  new Date(date).toLocaleDateString("pt-BR");
 
-      setPagamentosSemVinculo(novaLista);
-      setPagamentosFiltrados(novaLista);
-      setNotasSelecionadas([]);
-      setPagamentosSelecionado([]);
-      toast.success("Sucesso!");
-      window.dispatchEvent(new CustomEvent("atualizarSidebar"));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      const mensagem =
-        error?.response?.data ||
-        error?.response?.data?.message ||
-        "Erro ao processar"
+const fecharModal = () => {
+  setModalGetNotasVisible(false);
+}
 
-      toast.error(mensagem)
-    }
+const handleUpload = async () => {
+
+  const autoriz: Autorizacao[] = pagamentosSelecionado.map(p => ({
+    id: null,
+    concId: null,
+    numAutorizacao: p.numAutorizacao,
+    totalParc: p.totalParcela,
+    DataUltParc: p.dataPrevistaLiquidacao,
+    vlrTotal: p.valorParcelaLiquido,
+    pagamentoId: p.id
+  }));
+
+  const maiorData = autoriz
+    .map(a => new Date(a.DataUltParc || Date.now.toString()))
+    .reduce((max, atual) => (atual > max ? atual : max));
+
+  const conciliacao: Conciliacao = {
+    id: null,
+    autorizacoes: autoriz,
+    DataUltParc: maiorData,
+    Finalizada: 0,
+    totalAutoriz: autoriz.length,
+    totalNotas: notasSelecionadas.length,
+    vlrAbNotas: notasSelecionadas.reduce(
+      (soma, n) => soma + (n.vlrAb || 0),
+      0
+    ),
+    vlrTotalAutoriz: pagamentosSelecionado.reduce(
+      (soma, p) => soma + (p.valorParcelaLiquido || 0),
+      0
+    ),
+
+    notas: notasSelecionadas,
   };
 
-  const selecionarNota = (nota: NotaFiscal) => {
-    setNotasSelecionadas(prev => [...prev, nota]);
+  //console.log("dados enviados:", conciliacao);
+  try {
+    await vincularNota(conciliacao);
+    const novaLista = pagamentosSemVinculo.filter(p =>
+      !pagamentosSelecionado.some(ps => ps.numAutorizacao === p.numAutorizacao)
+    );
+
+    setPagamentosSemVinculo(novaLista);
+    setPagamentosFiltrados(novaLista);
+    setNotasSelecionadas([]);
+    setPagamentosSelecionado([]);
+    toast.success("Sucesso!");
+    window.dispatchEvent(new CustomEvent("atualizarSidebar"));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    const mensagem =
+      error?.response?.data ||
+      error?.response?.data?.message ||
+      "Erro ao processar"
+
+    toast.error(mensagem)
   }
+};
 
-  if (loading) return <Spinner fullScreen />;
+const selecionarNota = (nota: NotaFiscal) => {
+  setNotasSelecionadas(prev => [...prev, nota]);
+}
 
-  return (
-    <div style={{ display: "flex", width: "100%" }}>
+if (loading) return <Spinner fullScreen />;
 
-      {/* LISTA PRINCIPAL */}
-      <div style={styles.container}>
-        <div style={styles.header}>
-          <h2 style={styles.title}>🔗 Pendentes de Vínculo</h2>
+return (
+  <div style={{ display: "flex", width: "100%" }}>
 
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="Número da Autorização"
-            onChange={handleSearch}
-          />
-        </div>
+    {/* LISTA PRINCIPAL */}
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.title}>🔗 Pendentes de Vínculo</h2>
 
-        {pagamentosFiltrados.length === 0 ? (
-          <div style={styles.empty}>Nenhuma transação encontrada</div>
-        ) : (
-          <div style={styles.grid}>
-            {pagamentosFiltrados.map(item => (
-              <div key={item.numAutorizacao} style={styles.card}>
+        <input
+          style={styles.input}
+          type="text"
+          placeholder="Número da Autorização"
+          onChange={handleSearch}
+        />
+      </div>
 
-                <div style={styles.header}>
-                  <span style={styles.autorizacao}>
-                    #{item.numAutorizacao}
-                  </span>
+      {pagamentosFiltrados.length === 0 ? (
+        <div style={styles.empty}>Nenhuma transação encontrada</div>
+      ) : (
+        <div style={styles.grid}>
+          {pagamentosFiltrados.map(item => (
+            <div key={item.numAutorizacao} style={styles.card}>
 
-                  <span style={styles.badge}>
-                    💳 {item.bandeira}
-                  </span>
-                </div>
+              <div style={styles.header}>
+                <span style={styles.autorizacao}>
+                  #{item.numAutorizacao}
+                </span>
 
-                <div style={styles.body}>
-                  <p><strong>Parcela:</strong> {item.parcela}/{item.totalParcela}</p>
-                  <p><strong>Valor:</strong> {formatMoney(item.valorParcelaLiquido)}</p>
-                  <p><strong>Total:</strong> {formatMoney(item.totalPlanoVenda)}</p>
-                  <p><strong>Data:</strong>{item.dataPrevistaLiquidacao ? formatDate(item.dataPrevistaLiquidacao.toString()) : "—"}</p>
-                </div>
-
-                <div style={styles.divFlex}>
-                  <CTooltip content="Juntar este pagamento com outros pagamentos ja vinculados" placement="top">
-                    <button
-                      style={{...styles.button, backgroundColor: "#059669"}} // verde
-                      onClick={() => handleVincularPagamentoExistente(item)}
-                    >
-                      Juntar
-                    </button>
-                  </CTooltip>
-                  <CTooltip content="Selecionar pagamento para vincular com nota fiscal" placement="top">
-                    <button
-                      style={styles.button}
-                      onClick={() => handleSelect(item)}
-                    >
-                      Selecionar
-                    </button>
-                  </CTooltip>
-                </div>
+                <span style={styles.badge}>
+                  💳 {item.bandeira}
+                </span>
               </div>
-            ))}
+
+              <div style={styles.body}>
+                <p><strong>Parcela:</strong> {item.parcela}/{item.totalParcela}</p>
+                <p><strong>Valor:</strong> {formatMoney(item.valorParcelaLiquido)}</p>
+                <p><strong>Total:</strong> {formatMoney(item.totalPlanoVenda)}</p>
+                <p>
+                  <div style={styles.header}>
+                    <div><strong>Data:</strong>{item.dataPrevistaLiquidacao ? formatDate(item.dataPrevistaLiquidacao.toString()) : "—"}</div>
+                    {item.id && (
+                      <span style={{ ...styles.badge, backgroundColor: "#f87171", cursor: "pointer" }} onClick={handleDeletarPagamento(item)}>
+                        Deletar
+                      </span>
+                    )}
+                  </div>
+                </p>
+
+              </div>
+
+              <div style={styles.divFlex}>
+                <CTooltip content="Juntar este pagamento com outros pagamentos ja vinculados" placement="top">
+                  <button
+                    style={{ ...styles.button, backgroundColor: "#059669" }} // verde
+                    onClick={() => handleVincularPagamentoExistente(item)}
+                  >
+                    Juntar
+                  </button>
+                </CTooltip>
+                <CTooltip content="Selecionar pagamento para vincular com nota fiscal" placement="top">
+                  <button
+                    style={styles.button}
+                    onClick={() => handleSelect(item)}
+                  >
+                    Selecionar
+                  </button>
+                </CTooltip>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* LATERAL */}
+    <div style={styles.side}>
+      <div style={styles.cardSide}>
+        <CTooltip content="Adicionar nota fiscal para vincular com os pagamentos selecionados" placement="top">
+          <button
+            style={styles.btnOpenModal}
+            onClick={() => setModalGetNotasVisible(true)}
+          >
+            + Selecionar Notas
+          </button>
+        </CTooltip>
+        <h4 style={styles.sectionTitle}>📌 Pagamentos Selecionados</h4>
+
+        {pagamentosSelecionado.length === 0 && (
+          <div style={styles.emptySmall}>
+            Nenhum pagamento selecionado
           </div>
         )}
-      </div>
 
-      {/* LATERAL */}
-      <div style={styles.side}>
-        <div style={styles.cardSide}>
-          <CTooltip content="Adicionar nota fiscal para vincular com os pagamentos selecionados" placement="top">
+        {pagamentosSelecionado.map(p => (
+          <div key={p.numAutorizacao} style={styles.selectedItem}>
+            <div>
+              <div style={styles.selectedTitle}>
+                #{p.numAutorizacao}
+              </div>
+
+              <div style={styles.selectedValue}>
+                {formatMoney(p.valorParcelaLiquido)}
+              </div>
+            </div>
+
             <button
-              style={styles.btnOpenModal}
-              onClick={() => setModalGetNotasVisible(true)}
+              style={styles.btnRemove}
+              onClick={() => handleRemove(p)}
             >
-              + Selecionar Notas
+              ✕
             </button>
-          </CTooltip>
-          <h4 style={styles.sectionTitle}>📌 Pagamentos Selecionados</h4>
+          </div>
+        ))}
 
-          {pagamentosSelecionado.length === 0 && (
-            <div style={styles.emptySmall}>
-              Nenhum pagamento selecionado
-            </div>
-          )}
+        {/* DIVISOR */}
+        <div style={styles.divider} />
 
-          {pagamentosSelecionado.map(p => (
-            <div key={p.numAutorizacao} style={styles.selectedItem}>
-              <div>
-                <div style={styles.selectedTitle}>
-                  #{p.numAutorizacao}
-                </div>
+        {/* 🔥 NOTAS */}
+        <h4 style={styles.sectionTitle}>🧾 Notas Fiscais</h4>
 
-                <div style={styles.selectedValue}>
-                  {formatMoney(p.valorParcelaLiquido)}
-                </div>
+        {notasSelecionadas.length === 0 && (
+          <div style={styles.emptySmall}>
+            Nenhuma nota adicionada
+          </div>
+        )}
+
+        {notasSelecionadas.map(n => (
+          <div key={n.id} style={styles.selectedItem}>
+            <div>
+              <div style={styles.selectedTitle}>
+                NF {n.numNf}
               </div>
 
-              <button
-                style={styles.btnRemove}
-                onClick={() => handleRemove(p)}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-
-          {/* DIVISOR */}
-          <div style={styles.divider} />
-
-          {/* 🔥 NOTAS */}
-          <h4 style={styles.sectionTitle}>🧾 Notas Fiscais</h4>
-
-          {notasSelecionadas.length === 0 && (
-            <div style={styles.emptySmall}>
-              Nenhuma nota adicionada
-            </div>
-          )}
-
-          {notasSelecionadas.map(n => (
-            <div key={n.id} style={styles.selectedItem}>
-              <div>
-                <div style={styles.selectedTitle}>
-                  NF {n.numNf}
-                </div>
-
-                <div style={styles.selectedValue}>
-                  {formatMoney(n.vlrTotal)}
-                </div>
+              <div style={styles.selectedValue}>
+                {formatMoney(n.vlrTotal)}
               </div>
-
-              <button
-                style={styles.btnRemove}
-                onClick={() =>
-                  setNotasSelecionadas(prev =>
-                    prev.filter(x => x.id !== n.id)
-                  )
-                }
-              >
-                ✕
-              </button>
             </div>
-          ))}
-        </div>
+
+            <button
+              style={styles.btnRemove}
+              onClick={() =>
+                setNotasSelecionadas(prev =>
+                  prev.filter(x => x.id !== n.id)
+                )
+              }
+            >
+              ✕
+            </button>
+          </div>
+        ))}
       </div>
-      {notasSelecionadas.length > 0 && pagamentosSelecionado.length > 0 && (
-        <button style={styles.fab} onClick={handleUpload}>
-          ⬆ Vincular
-        </button>
-      )}
-
-      {modalGetNotaVisible && (
-        <ModalGetNota
-          onClose={fecharModal}
-          selecionarNota={selecionarNota}
-          visible={modalGetNotaVisible}
-        />
-      )}
-      {modalVincPgtoExistVisible && pagamentoParaVincular &&(
-        <ModalVincularPagamentoExistente
-          onClose={() => setModalVincPgtoExistVisible(false)}
-          visible={modalVincPgtoExistVisible}
-          pagamento={pagamentoParaVincular}
-          removerPagamento={handleremoverPagamento}
-        />
-      )}
-
     </div>
-  );
+    {notasSelecionadas.length > 0 && pagamentosSelecionado.length > 0 && (
+      <button style={styles.fab} onClick={handleUpload}>
+        ⬆ Vincular
+      </button>
+    )}
+
+    {modalGetNotaVisible && (
+      <ModalGetNota
+        onClose={fecharModal}
+        selecionarNota={selecionarNota}
+        visible={modalGetNotaVisible}
+      />
+    )}
+    {modalVincPgtoExistVisible && pagamentoParaVincular && (
+      <ModalVincularPagamentoExistente
+        onClose={() => setModalVincPgtoExistVisible(false)}
+        visible={modalVincPgtoExistVisible}
+        pagamento={pagamentoParaVincular}
+        removerPagamento={handleRemoverPagamento}
+      />
+    )}
+
+  </div>
+);
 };
 
 const styles = {
