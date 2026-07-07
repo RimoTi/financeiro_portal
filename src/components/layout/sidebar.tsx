@@ -1,6 +1,6 @@
 import React from "react";
 import { getTransacoesSemVinculo, getTransacoesPendentesBaixa } from "../../features/consciliacao/consciliacaoService";
-import {  Pagamento } from "../../features/consciliacao/types";
+import { Pagamento } from "../../features/consciliacao/types";
 import { useLocation } from "react-router-dom";
 
 import {
@@ -46,8 +46,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
   }, []);
 
   React.useEffect(() => {
+    let isMounted = true; // Flag de controle
+
+    const fetchData = async () => {
+      try {
+        const [dataVinculo, dataBaixa] = await Promise.all([
+          getTransacoesSemVinculo(),
+          getTransacoesPendentesBaixa()
+        ]);
+
+        if (isMounted) {
+          setPedentesVinculo(dataVinculo);
+          setPendentesBaixa(dataBaixa);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     fetchData();
-  }, [location.pathname]);
+
+    return () => {
+      isMounted = false; // Cancela a atualização se o componente desmontar
+    };
+    
+  }, [location.pathname]); // O efeito depende de location.pathname
 
 
   return (
@@ -116,7 +139,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
 
 
           </CNavItem>
-                    <CNavItem>
+          <CNavItem>
             <Link to="/consciliacao/historico" className="nav-link">
               📝 Histórico de Movimentações
             </Link>
@@ -124,11 +147,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
 
         </CNavGroup>
         <CNavItem>
-            <Link to="/baixar/ecommerce" className="nav-link">
-              📊 Baixar Titulos E-Commerce
+          <Link to="/baixar/ecommerce" className="nav-link">
+            📊 Baixar Titulos E-Commerce
+          </Link>
+        </CNavItem>
+        <CNavGroup toggler="🏷️ Cupons">
+          <CNavItem>
+            <Link to="/listar/cupons" className="nav-link">
+              📰 Acumulado
             </Link>
           </CNavItem>
+          <CNavItem>
+            <Link to="/cupons/a/gerar" className="nav-link">
+            💸 Gerar Titulos              
+            </Link>
+          </CNavItem>
+          <CNavItem>
+            <Link to="/baixar/ecommerce" className="nav-link">
+              💰 Baixar Titulos Cup
+            </Link>
+          </CNavItem>
+        </CNavGroup>
       </CSidebarNav>
+
+
     </CSidebar>
   );
 };

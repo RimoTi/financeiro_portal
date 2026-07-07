@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/services/interceptors.ts
 import type { AxiosError, AxiosInstance } from "axios";
 
@@ -29,11 +30,12 @@ export function setupInterceptors(api: AxiosInstance) {
         window.location.href = "/";
       }
 
-      if (status === 500) {
-        console.error("Erro interno no servidor:", error.response?.data);
-      }
+    // 2. Extração da mensagem (Onde a mágica acontece)
+      const data = error.response?.data as any;
+      const message = data?.message || data || error.message || "Erro desconhecido";
 
-      return Promise.reject(error);
+      // 3. Rejeita a promise passando apenas o objeto Error com a mensagem correta
+      return Promise.reject(new Error(message));
     }
   );
 }
