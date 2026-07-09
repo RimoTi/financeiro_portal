@@ -1,4 +1,4 @@
-export interface Credito {
+ interface Credito {
   id: number;
   pdvId: number;
   dtCadastro: string;
@@ -18,7 +18,7 @@ export interface Credito {
   titCupId: number | null;
 }
 
-export interface Debito {
+interface Debito {
   id: number;
   pdvId: number;
   dtCadastro: string;
@@ -41,22 +41,112 @@ export interface Debito {
   titCupId: number | null;
 }
 
-export interface Representante {
-  repId: number;
+interface Representante {
+  id: number;
   codRep: string;
-  descRep: string;
-  creditos: Credito[];
-  debitos: Debito[];
-  cupon: Cupom;
+  descRep: string; 
 }
 
+export interface SaldoRepresentante{
+  representante :Representante;
+  saldo: number
+}
+
+export interface DadosGerarCupon{
+  representante :Representante;
+   creditos: Credito[];
+  debitos: Debito[];
+  cupon: Cupom ;
+}
 
 export interface Cupom {
+    id: number | null;
     repId: number;
     ttitCrId: number | null;
     vlrTit: number;
     vlrPendente: number;
     observacao: string;
     dtCadastro: Date;
+    totalCreditos: number;
+    totalDebitos: number;
+    totalDebitosAbat: number;
+    historico: Historico[];
+}
 
+export interface Abatimento {
+    representante :Representante;
+    vlrTotPedidos : number;
+    vlrTotCupons : number ;
+    vlrAbatCupom : number;
+    vlrResidPedidos : number ;
+    cuponsPendentes : Cupom[];
+    pedidos: Pedido[],    
+}
+
+export interface DetalhesSaldo{
+  representante :Representante;
+  cupons: Cupom[];
+}
+
+interface Historico {
+   id: number;
+   titCupId: number;
+   ttitCrId: number;
+   thistMovCrId: number;
+   dtMov: Date;
+   vlrMov: number;
+   vlrAb: number;
+   tpMov: string;
+   abatimentos: Abatimento[]
+}
+
+export interface TituloErp{
+  titCupId: number;
+  ttitCrId: number;
+  numTit: string,
+  historicos: HistoricoErp[];
+}
+
+export interface TitulosPendentesErp{
+  representante: Representante;
+  titulos: TituloErp[];
+}
+interface HistoricoErp {
+      tfHistTitCupId: number;
+      dtMov: Date;
+      vlrMov: number;
+      vlrAbCup: number;
+      tpMov: string;
+    }
+
+export interface Abatimento {
+    id: number;
+    pdvId?: number | null;
+    vlrPdv?: number | null;
+    numPedido?: number | null;
+    nf?: number | null;
+    vlrAbat: number;
+    dtAbat: Date; // Ou Date, se você fizer a conversão no parse do JSON
+    repId: number;
+    titCupId: number;
+    observacao?: string | null;
+    thistMovCrId : number | null
+}
+
+interface Pedido {
+  pdvId: number;
+  numPedido: number;
+  numNf: number;
+  vlrPdv: number;
+  vlrAbat: number;
+  dtAbat: Date;
+}
+
+export interface MovimentoBaixa{
+  numerosPedidos: number[];
+  observacao: string;
+  baixaAvulsa: {
+    codRep : string;
+    valor : number
+  } | null
 }

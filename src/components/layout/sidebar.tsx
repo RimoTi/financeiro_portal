@@ -1,5 +1,6 @@
 import React from "react";
 import { getTransacoesSemVinculo, getTransacoesPendentesBaixa } from "../../features/consciliacao/consciliacaoService";
+import { getTotalCuponsGerar, getCuponsPendentesBaixarNoErp } from "@features/cupom/cupom_service"
 import { Pagamento } from "../../features/consciliacao/types";
 import { useLocation } from "react-router-dom";
 
@@ -20,6 +21,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) => {
   const [pedentesVinculo, setPedentesVinculo] = React.useState<Pagamento[]>([]);
   const [pendentesBaixa, setPendentesBaixa] = React.useState<Pagamento[]>([]);
+  const [cuponsGerar, setCuponsGerar] = React.useState<number>(0);
+  const [cupPendBaixErp, setCupPendBaixErp] = React.useState<number>(0);
   const location = useLocation();
   const fetchData = async () => {
     try {
@@ -28,6 +31,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
 
       const dataBaixa = await getTransacoesPendentesBaixa();
       setPendentesBaixa(dataBaixa);
+
+      const dataCuponGerar = await getTotalCuponsGerar();
+      setCuponsGerar(dataCuponGerar);
+
+      const dataPendenteBaixaErp = await getCuponsPendentesBaixarNoErp();
+      setCupPendBaixErp(dataPendenteBaixaErp.length || 0)
     } catch (error) {
       console.error(error);
     }
@@ -69,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
     return () => {
       isMounted = false; // Cancela a atualização se o componente desmontar
     };
-    
+
   }, [location.pathname]); // O efeito depende de location.pathname
 
 
@@ -85,7 +94,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
         backgroundColor: "#f5f5f5",
       }}
     >
-      <CSidebarNav>
+      <CSidebarNav onClick={fetchData}>
         <CNavTitle>Menu</CNavTitle>
 
         <CNavItem>
@@ -136,8 +145,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
                 </span>
               )}
             </div>
-
-
           </CNavItem>
           <CNavItem>
             <Link to="/consciliacao/historico" className="nav-link">
@@ -153,19 +160,38 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
         </CNavItem>
         <CNavGroup toggler="🏷️ Cupons">
           <CNavItem>
-            <Link to="/listar/cupons" className="nav-link">
+            <Link to="/listar/representantes/saldo" className="nav-link">
               📰 Acumulado
             </Link>
           </CNavItem>
           <CNavItem>
-            <Link to="/cupons/a/gerar" className="nav-link">
-            💸 Gerar Titulos              
+            <div style={styles.navItem}>
+              <Link to="/cupons/a/gerar" className="nav-link">
+                💸 Gerar Titulos Cup
+              </Link>
+              {cuponsGerar > 0 && (
+                <span style={{ ...styles.badge, ...styles.badgeTitGerar }}>
+                  {cuponsGerar}
+                </span>
+              )}
+            </div>
+          </CNavItem>
+          <CNavItem>
+            <Link to="/abater/pedidos" className="nav-link">
+              💰 Abater Saldo
             </Link>
           </CNavItem>
           <CNavItem>
-            <Link to="/baixar/ecommerce" className="nav-link">
-              💰 Baixar Titulos Cup
-            </Link>
+            <div style={styles.navItem}>
+              <Link to="/Pendentes/Baixa/Erp" className="nav-link">
+                💲 Baixar Titulos
+              </Link>
+              {cupPendBaixErp > 0 && (
+                <span style={{ ...styles.badge, ...styles.badgeTitBaixar }}>
+                  {cupPendBaixErp}
+                </span>
+              )}
+            </div>
           </CNavItem>
         </CNavGroup>
       </CSidebarNav>
@@ -185,6 +211,8 @@ const styles = {
 
   badgeVinculo: { left: "205px" },
   badgeBaixa: { left: "165px" },
+  badgeTitGerar: { left: "200px" },
+  badgeTitBaixar: { left: "180px" },
 
   badge: {
     position: "absolute" as const,

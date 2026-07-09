@@ -1,20 +1,55 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { useLocation,  useNavigate } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
+import { formatMoney } from "@utils/functions"
 /*import { Spinner } from "@components/spinner";*/
-import { Representante } from "@features/cupom/types";
+import { DadosGerarCupon } from "@features/cupom/types";
 import { CButton } from "@coreui/react";
+import { toast } from "react-toastify";
+import { gerarTituloCupom } from "../cupom_service";
+import { Spinner } from "@components/spinner";
+
 
 export const DetalhesCupom: React.FC = () => {
 
     const location = useLocation();
     const navigate = useNavigate()
-    //const { id } = useParams<{ id: string }>();
-
-    const [rep, setRepresentante] = useState<Representante | null>(
-        location.state?.representante || null
+    const [loading, setLoading] = useState(false);
+    const [rep, setRepresentante] = useState<DadosGerarCupon | null>(
+        location.state?.dados || null
     );
+
+
+    const GerarCupons = async () => {
+        const confirmado = window.confirm("Você tem certeza que deseja gerar estes cupons?");
+
+        if (!confirmado) {
+            return; // Interrompe a execução se o usuário clicar em Cancelar
+        }
+        if (rep?.creditos.length == 0) {
+            toast.error("Lista esta vazia")
+            return
+        }
+        try {
+            setLoading(true);
+            if (!rep) {
+                toast.error("Representante não encontrado na lista.");
+                return; // Interrompe a execução
+            }
+            const reps = [rep]
+            const msg = await gerarTituloCupom(reps);
+            toast.success(msg);
+            navigate("/cupons/a/gerar")
+            console.log(reps);
+            window.dispatchEvent(new CustomEvent("atualizarSidebar"));
+        } catch (error) {
+            const mensagem = error instanceof Error ? error.message : "Erro inesperado";
+            toast.error(mensagem);
+        } finally {
+            // O finally sempre executa, independente de sucesso ou falha
+            setLoading(false);
+        }
+    }
 
     // Função genérica para alternar o checkbox de um item específico
     const toggleItem = (id: number, tipo: 'creditos' | 'debitos') => {
@@ -47,17 +82,27 @@ export const DetalhesCupom: React.FC = () => {
         });
     };
 
-    const formatMoney = (val: number) =>
-        val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const totalCreditos = (rep?.creditos ?? []).filter(p=>p.checkado).reduce((acumulador, item) => {
+        return acumulador + (item.vlrPremioPdv || 0);
+    }, 0);
 
+    const totalDebitos = (rep?.debitos ?? []).filter(d=>d.checkado).reduce((acumulador, item) => {
+        return acumulador + (item.vlrPend || 0);
+    }, 0);
 
+    if (loading) return <Spinner text="Aceitando titulo de Cupom" />
     return rep && (
         <div style={styles.container}>
-            <div style={styles.headerRow}>                
-                <h2 style={styles.repTitle}>{rep.descRep} ({rep.codRep})</h2>
+            <div style={styles.headerRow}>
+                <h2 style={styles.repTitle}>{rep.representante.descRep} ({rep.representante.codRep})</h2>
                 <CButton style={styles.buttonVoltar} size="sm" onClick={() => navigate(-1)}>
                     ⬅️ Voltar
                 </CButton>
+            </div>
+            <div style={styles.headerRow}>
+                <div style={styles.statItem}><small>Total Creditos</small><strong>{formatMoney(totalCreditos)}</strong></div>
+                <div style={styles.statItem}><small>Total Debitos</small><strong>{formatMoney(totalDebitos)}</strong></div>
+                <div style={styles.statItem}><small>Valor Final</small><strong style={{ color: '#d97706' }}>{formatMoney(totalCreditos - totalDebitos)}</strong></div>
             </div>
             <h3 style={styles.subTitle}>Créditos</h3>
             <table style={styles.table}>
@@ -116,20 +161,22 @@ export const DetalhesCupom: React.FC = () => {
                     ))}
                 </tbody>
             </table>
-             <div style={styles.buttonsArea}>
-                <CButton color="primary" >Gerar</CButton>
+            <div style={styles.buttonsArea}>
+                <CButton onClick={() => GerarCupons()} color="primary" 
+                disabled={rep.creditos.filter(c=>c.checkado).length === 0} 
+                >Gerar</CButton>
             </div>
         </div>
     );
 };
 
 const styles: { [key: string]: React.CSSProperties } = {
-    buttonsArea:{
-        margin:"20px",
+    buttonsArea: {
+        margin: "20px",
         display: "flex",         // Necessário para habilitar o alinhamento flex
         justifyContent: "flex-end"
     },
-    buttonVoltar:{backgroundColor: "grey", width: "100px"},
+    buttonVoltar: { backgroundColor: "grey", width: "100px" },
     container: { padding: "24px", minHeight: "100vh" },
     headerRow: {
         display: "flex",
@@ -140,9 +187,10 @@ const styles: { [key: string]: React.CSSProperties } = {
         width: "100%"                 // Garante que o container ocupe a largura total
     },
     section: { marginBottom: "40px", backgroundColor: "#ffffff", padding: "20px", borderRadius: "16px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" },
-    repTitle: { fontSize: "20px", color: "#1e293b",  borderBottom: "2px solid #e2e8f0", paddingBottom: "10px" },
+    repTitle: { fontSize: "20px", color: "#1e293b", borderBottom: "2px solid #e2e8f0", paddingBottom: "10px" },
     subTitle: { fontSize: "16px", color: "#64748b", marginTop: "20px", marginBottom: "10px" },
     table: { width: "100%", borderCollapse: "collapse", marginTop: "10px", backgroundColor: "#fff", borderRadius: "8px", overflow: "hidden" },
     th: { textAlign: "left", padding: "12px", backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0", fontSize: "14px", color: "#475569" },
-    td: { padding: "12px", borderBottom: "1px solid #f1f5f9", fontSize: "14px", color: "#1e293b" }
+    td: { padding: "12px", borderBottom: "1px solid #f1f5f9", fontSize: "14px", color: "#1e293b" },
+    statItem: { display: "flex", flexDirection: "column", gap: "4px" , marginLeft:"30px", marginRight:"30px"},
 };

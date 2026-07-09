@@ -14,9 +14,12 @@ const ImportCsvEcommerce = lazy(() => import("@features/ecommerce/pages/baixarTi
 const ResultadoBaixaTitulos = lazy(() => import("@features/consciliacao/pages/resultadoBaixaTitulos").then(m => ({ default: m.ResultadoBaixaTitulos })));
 const HistoricoMov = lazy(() => import("@features/consciliacao/pages/historicoMov").then(m => ({ default: m.HistoricoMov })));
 
-const ListaCupons = lazy(()=> import("@features/cupom/pages/lista_cupons").then(m=>({default: m.ListaCupons})));
+const ListaRepSaldo = lazy(()=> import("@features/cupom/pages/lista_rep_saldo").then(m=>({default: m.ListaRepSaldo})));
 const GerarCupons = lazy(()=> import("@features/cupom/pages/cupons_a_gerar").then(m=>({default: m.GerarCupons})));
 const DetalhesCupom = lazy(()=> import("@features/cupom/pages/detalhes_cupom_a_gerar").then(m=>({default: m.DetalhesCupom})));
+const AbaterSaldo = lazy(()=> import("@features/cupom/pages/abater_saldo").then(m=>({default: m.AbaterSaldo})));
+const DetalhesSaldoCupons = lazy(()=> import("@features/cupom/pages/detalhes_saldo").then(m=>({default: m.DetalhesSaldoCupons})));
+const ListaTitulosPendentesErp = lazy(()=> import("@features/cupom/pages/baixar_titulos_erp").then(m=>({default: m.ListaTitulosPendentesErp})));
 
 const withSuspense = (element: JSX.Element) => (
   <Suspense fallback={<div>Carregando...</div>}>{element}</Suspense>
@@ -42,9 +45,13 @@ export const AppRoutes = createBrowserRouter([
           { path: "/baixar/ecommerce", element: withSuspense(<ImportCsvEcommerce />) },
           { path: "/consciliacao/retorno", element: withSuspense(<ResultadoBaixaTitulos />) },
           { path: "/consciliacao/historico", element: withSuspense(<HistoricoMov />) },
-          { path: "/listar/cupons", element:withSuspense(<ListaCupons/>)},
+          
+          { path: "/listar/representantes/saldo", element:withSuspense(<ListaRepSaldo/>)},
           { path: "/cupons/a/gerar", element:withSuspense(<GerarCupons/>)},
           { path: "/detalhes/cupons/a/gerar/:id", element:withSuspense(<DetalhesCupom/>)},
+          { path: "/abater/pedidos", element:withSuspense(<AbaterSaldo/>)},
+          { path: "/detalhes/saldo/:codRep", element:withSuspense(<DetalhesSaldoCupons/>)},
+          { path: "/Pendentes/Baixa/Erp", element:withSuspense(<ListaTitulosPendentesErp/>)},
         ],
       },
     ],
