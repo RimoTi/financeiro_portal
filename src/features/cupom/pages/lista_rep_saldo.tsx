@@ -1,7 +1,7 @@
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CButton } from "@coreui/react";
 import React, { useEffect, useState } from "react";
 import { formatMoney } from "@utils/functions"
-import { ListaRepresentantes } from "../types";
+import { SaldoRepresentante } from "../types";
 import { toast } from "react-toastify";
 import { getListaRepresentantes } from "../cupom_service";
 import { Spinner } from "@components/spinner";
@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 // Supondo que seus dados venham em um array chamado 'data'
 export const ListaRepSaldo: React.FC = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState<ListaRepresentantes[]>([])
+  const [data, setData] = useState<SaldoRepresentante[]>([])
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export const ListaRepSaldo: React.FC = () => {
                     </div>
                   </div>
                   <CButton color="primary" variant="outline" size="sm"
-                    onClick={() => navigate(`/detalhes/saldo/${item.representante.codRep}`)}
+                    onClick={() => navigate(`/detalhes/saldo/representante/${item.representante.codRep}`)}
                   >
                     Ver Detalhes
                   </CButton>

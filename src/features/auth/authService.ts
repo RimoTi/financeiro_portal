@@ -7,6 +7,11 @@ export interface LoginCredentials {
   senha: string;
 }
 
+export enum TipoMenu {
+    TitulosFinanceiro = "TitulosFinanceiro",   // 0
+    CupomDesconto = "CupomDesconto" // 2
+}
+
 
 export const authService = {
   async logar(credentials: LoginCredentials): Promise<Usuario | void> {
@@ -18,4 +23,8 @@ export const authService = {
       alert(error.response?.data || "Erro ao fazer login");
     }
   }
+};
+
+export const hasPermission = (usuario: Usuario, menu: TipoMenu): boolean => {
+  return usuario.permissoes.includes(menu);
 };

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 import { useAuth } from '@context/useAuth';
 import {authService} from '../../authService';
+import { getBaixasIndevidas } from '@features/cupom/cupom_service';
 
 const Login: React.FC = () => {
   const [loginUsuario, setLoginUsuario] = useState<string>(''); // mudei o nome para não confundir com a função login
@@ -25,7 +26,11 @@ const Login: React.FC = () => {
       // 4. Se a API respondeu ok, avisamos o Contexto para gravar os dados e mudar o estado global
       if (data) {
         setUsuario(data);
-        navigate('/home');
+        //verificar se exite baixas indevidas de cupons
+        const baixas = await getBaixasIndevidas();
+        if(baixas.length > 0){
+          navigate("/mensagem/erro/baixaIndevida", {state:baixas})
+        }else{ navigate('/home');}       
       } else {
         setError('Erro ao logar.');
       }

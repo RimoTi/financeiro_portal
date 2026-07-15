@@ -1,5 +1,5 @@
 import api from '../../services/api';
-import { Abatimento, DadosGerarCupon, DetalhesSaldo, SaldoRepresentante, MovimentoBaixa, TitulosPendentesErp } from './types';
+import { Abatimento, DadosGerarCupon, DetalhesSaldo, SaldoRepresentante, MovimentoBaixa, TitulosPendentesErp, Cupom, payloadPesquisa, BaixasIndevidas } from './types';
 
 export async function getCuponsPedidosNaoGerados(): Promise<DadosGerarCupon[]> {
     const response = await api.get<DadosGerarCupon[]>(
@@ -38,6 +38,13 @@ export async function getDetalhesSaldo(codRep:string): Promise<DetalhesSaldo> {
     return response.data as unknown as DetalhesSaldo;
 }
 
+export async function getDetalhesCupom(cupId:string): Promise<Cupom> {
+  const response = await api.get<Cupom>(
+      `/Cupon/${cupId}/detalhes`
+    );
+    return response.data as unknown as Cupom;
+}
+
 export async function getTotalCuponsGerar(): Promise<number> {
   const response = await api.get<number>(
       `/Cupon/ContagemRepresentantesComSaldo`
@@ -73,5 +80,20 @@ export async function baixarTitulosErp(data: TitulosPendentesErp[]): Promise<str
       data
     );
     return response.data as unknown as string;
+}
+
+export async function pesquisarCupons(data: payloadPesquisa): Promise<DetalhesSaldo[]> {
+  const response = await api.post<DetalhesSaldo[]>(
+      "/Cupon/PesquisarCupons",
+      data
+    );
+    return response.data as unknown as DetalhesSaldo[];
+}
+
+export async function getBaixasIndevidas(): Promise<BaixasIndevidas[]> {
+  const response = await api.get<BaixasIndevidas[]>(
+      "/Cupon/BaixasNaoReconhecidas"
+    );
+    return response.data as unknown as BaixasIndevidas[];
 }
 

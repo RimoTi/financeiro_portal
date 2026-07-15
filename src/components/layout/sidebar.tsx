@@ -3,6 +3,8 @@ import { getTransacoesSemVinculo, getTransacoesPendentesBaixa } from "../../feat
 import { getTotalCuponsGerar, getCuponsPendentesBaixarNoErp } from "@features/cupom/cupom_service"
 import { Pagamento } from "../../features/consciliacao/types";
 import { useLocation } from "react-router-dom";
+import { hasPermission, TipoMenu } from "@features/auth/authService";
+import { useAuth } from "@context/useAuth";
 
 import {
   CSidebar,
@@ -24,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
   const [cuponsGerar, setCuponsGerar] = React.useState<number>(0);
   const [cupPendBaixErp, setCupPendBaixErp] = React.useState<number>(0);
   const location = useLocation();
+  const { usuario } = useAuth();
   const fetchData = async () => {
     try {
       const data = await getTransacoesSemVinculo();
@@ -104,95 +107,108 @@ export const Sidebar: React.FC<SidebarProps> = ({ visible, onVisibleChange }) =>
         </CNavItem>
 
         {/* DROPDOWN */}
-        <CNavGroup toggler="⚙️ Conciliação 💳">
+        {usuario && hasPermission(usuario, TipoMenu.TitulosFinanceiro) && (
+          <CNavGroup toggler="⚙️ Conciliação 💳">
 
-          <CNavItem>
-            <Link to="/consciliacao/importarVendas" className="nav-link">
-              📂 Importar CSV (Vendas)
-            </Link>
-          </CNavItem>
-
-          <CNavItem>
-            <Link to="/consciliacao/importarPagamentos" className="nav-link">
-              📂 Importar CSV (Pagamentos)
-            </Link>
-          </CNavItem>
-
-          <CNavItem>
-            <div style={styles.navItem}>
-              <Link to="/consciliacao/semVinculo" className="nav-link">
-                📋 Pendentes Vínculo
+            <CNavItem>
+              <Link to="/consciliacao/importarVendas" className="nav-link">
+                📂 Importar CSV (Vendas)
               </Link>
+            </CNavItem>
 
-              {pedentesVinculo.length > 0 && (
-                <span style={{ ...styles.badge, ...styles.badgeVinculo }}>
-                  {pedentesVinculo.length}
-                </span>
-              )}
-            </div>
-          </CNavItem>
-          <CNavItem>
-            <div style={styles.navItem}>
-              <Link to="/consciliacao/pendentesBaixa" className="nav-link">
-                📊 Baixar Títulos
+            <CNavItem>
+              <Link to="/consciliacao/importarPagamentos" className="nav-link">
+                📂 Importar CSV (Pagamentos)
               </Link>
+            </CNavItem>
 
-              {pendentesBaixa.length > 0 && (
-                <span style={{ ...styles.badge, ...styles.badgeBaixa }}>
-                  {pendentesBaixa.filter((item) =>
-                    item.concId != null && item.concId != undefined
-                  ).length}
-                </span>
-              )}
-            </div>
-          </CNavItem>
+            <CNavItem>
+              <div style={styles.navItem}>
+                <Link to="/consciliacao/semVinculo" className="nav-link">
+                  📋 Pendentes Vínculo
+                </Link>
+
+                {pedentesVinculo.length > 0 && (
+                  <span style={{ ...styles.badge, ...styles.badgeVinculo }}>
+                    {pedentesVinculo.length}
+                  </span>
+                )}
+              </div>
+            </CNavItem>
+            <CNavItem>
+              <div style={styles.navItem}>
+                <Link to="/consciliacao/pendentesBaixa" className="nav-link">
+                  📊 Baixar Títulos
+                </Link>
+
+                {pendentesBaixa.length > 0 && (
+                  <span style={{ ...styles.badge, ...styles.badgeBaixa }}>
+                    {pendentesBaixa.filter((item) =>
+                      item.concId != null && item.concId != undefined
+                    ).length}
+                  </span>
+                )}
+              </div>
+            </CNavItem>
+            <CNavItem>
+              <Link to="/consciliacao/historico" className="nav-link">
+                📝 Histórico de Movimentações
+              </Link>
+            </CNavItem>
+
+          </CNavGroup>
+        )}
+        {usuario && hasPermission(usuario, TipoMenu.TitulosFinanceiro) && (
           <CNavItem>
-            <Link to="/consciliacao/historico" className="nav-link">
-              📝 Histórico de Movimentações
+            <Link to="/baixar/ecommerce" className="nav-link">
+              📊 Baixar Titulos E-Commerce
             </Link>
           </CNavItem>
-
-        </CNavGroup>
-        <CNavItem>
-          <Link to="/baixar/ecommerce" className="nav-link">
-            📊 Baixar Titulos E-Commerce
-          </Link>
-        </CNavItem>
+        )}
         <CNavGroup toggler="🏷️ Cupons">
           <CNavItem>
             <Link to="/listar/representantes/saldo" className="nav-link">
-              📰 Acumulado
+              📰 Saldo Acumulado
             </Link>
           </CNavItem>
           <CNavItem>
-            <div style={styles.navItem}>
-              <Link to="/cupons/a/gerar" className="nav-link">
-                💸 Gerar Titulos Cup
-              </Link>
-              {cuponsGerar > 0 && (
-                <span style={{ ...styles.badge, ...styles.badgeTitGerar }}>
-                  {cuponsGerar}
-                </span>
-              )}
-            </div>
-          </CNavItem>
-          <CNavItem>
-            <Link to="/abater/pedidos" className="nav-link">
-              💰 Abater Saldo
+            <Link to="/pesquisar/cupons" className="nav-link">
+              🔎 Localizar Cupom
             </Link>
           </CNavItem>
-          <CNavItem>
-            <div style={styles.navItem}>
-              <Link to="/Pendentes/Baixa/Erp" className="nav-link">
-                💲 Baixar Titulos
+          {usuario && hasPermission(usuario, TipoMenu.TitulosFinanceiro) && (
+            <CNavItem>
+              <div style={styles.navItem}>
+                <Link to="/cupons/a/gerar" className="nav-link">
+                  💸 Gerar Titulos Cup
+                </Link>
+                {cuponsGerar > 0 && (
+                  <span style={{ ...styles.badge, ...styles.badgeTitGerar }}>
+                    {cuponsGerar}
+                  </span>
+                )}
+              </div>
+            </CNavItem>
+          )}
+          {usuario && hasPermission(usuario, TipoMenu.CupomDesconto) && (
+            <CNavItem>
+              <Link to="/abater/pedidos" className="nav-link">
+                💰 Abater Saldo
               </Link>
-              {cupPendBaixErp > 0 && (
-                <span style={{ ...styles.badge, ...styles.badgeTitBaixar }}>
-                  {cupPendBaixErp}
-                </span>
-              )}
-            </div>
-          </CNavItem>
+            </CNavItem>
+          )}
+            <CNavItem>
+              <div style={styles.navItem}>
+                <Link to="/Pendentes/Baixa/Erp" className="nav-link">
+                  💲 Baixar Titulos
+                </Link>
+                {cupPendBaixErp > 0 && (
+                  <span style={{ ...styles.badge, ...styles.badgeTitBaixar }}>
+                    {cupPendBaixErp}
+                  </span>
+                )}
+              </div>
+            </CNavItem>
         </CNavGroup>
       </CSidebarNav>
 

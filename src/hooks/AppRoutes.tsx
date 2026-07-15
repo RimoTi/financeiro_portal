@@ -20,6 +20,8 @@ const DetalhesCupom = lazy(()=> import("@features/cupom/pages/detalhes_cupom_a_g
 const AbaterSaldo = lazy(()=> import("@features/cupom/pages/abater_saldo").then(m=>({default: m.AbaterSaldo})));
 const DetalhesSaldoCupons = lazy(()=> import("@features/cupom/pages/detalhes_saldo").then(m=>({default: m.DetalhesSaldoCupons})));
 const ListaTitulosPendentesErp = lazy(()=> import("@features/cupom/pages/baixar_titulos_erp").then(m=>({default: m.ListaTitulosPendentesErp})));
+const PesquisaCupons = lazy(()=> import("@features/cupom/pages/pesquisa_cupons").then(m=>({default: m.PesquisaCupons})));
+const MsgErro = lazy(()=> import("@features/cupom/pages/msg_erro").then(m=>({default: m.MsgErro})));
 
 const withSuspense = (element: JSX.Element) => (
   <Suspense fallback={<div>Carregando...</div>}>{element}</Suspense>
@@ -50,8 +52,11 @@ export const AppRoutes = createBrowserRouter([
           { path: "/cupons/a/gerar", element:withSuspense(<GerarCupons/>)},
           { path: "/detalhes/cupons/a/gerar/:id", element:withSuspense(<DetalhesCupom/>)},
           { path: "/abater/pedidos", element:withSuspense(<AbaterSaldo/>)},
-          { path: "/detalhes/saldo/:codRep", element:withSuspense(<DetalhesSaldoCupons/>)},
+          { path: "/detalhes/saldo/representante/:codRep?", element:withSuspense(<DetalhesSaldoCupons/>)},
+          { path: "/detalhes/saldo/cupom/:cupId?", element:withSuspense(<DetalhesSaldoCupons/>)},
           { path: "/Pendentes/Baixa/Erp", element:withSuspense(<ListaTitulosPendentesErp/>)},
+          { path: "/pesquisar/cupons", element:withSuspense(<PesquisaCupons/>)},
+          { path: "/mensagem/erro/baixaIndevida", element:withSuspense(<MsgErro/>)},
         ],
       },
     ],

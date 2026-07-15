@@ -1,4 +1,4 @@
- interface Credito {
+interface Credito {
   id: number;
   pdvId: number;
   dtCadastro: string;
@@ -44,93 +44,94 @@ interface Debito {
 interface Representante {
   id: number;
   codRep: string;
-  descRep: string; 
+  descRep: string;
 }
 
-export interface SaldoRepresentante{
-  representante :Representante;
-  saldo: number
+export interface SaldoRepresentante {
+  representante: Representante;
+  saldo: number;
 }
 
-export interface DadosGerarCupon{
-  representante :Representante;
-   creditos: Credito[];
+export interface DadosGerarCupon {
+  representante: Representante;
+  creditos: Credito[];
   debitos: Debito[];
-  cupon: Cupom ;
+  cupon: Cupom;
 }
 
 export interface Cupom {
-    id: number | null;
-    repId: number;
-    ttitCrId: number | null;
-    vlrTit: number;
-    vlrPendente: number;
-    observacao: string;
-    dtCadastro: Date;
-    totalCreditos: number;
-    totalDebitos: number;
-    totalDebitosAbat: number;
-    historico: Historico[];
+  id: number | null;
+  repId: number;
+  ttitCrId: number | null;
+  vlrTit: number;
+  vlrPendente: number;
+  observacao: string;
+  dtCadastro: Date;
+  totalCreditos: number;
+  totalDebitos: number;
+  totalDebitosAbat: number;
+  historico: Historico[];
+  representante: Representante | null;
 }
 
 export interface Abatimento {
-    representante :Representante;
-    vlrTotPedidos : number;
-    vlrTotCupons : number ;
-    vlrAbatCupom : number;
-    vlrResidPedidos : number ;
-    cuponsPendentes : Cupom[];
-    pedidos: Pedido[],    
+  representante: Representante;
+  vlrTotPedidos: number;
+  vlrTotCupons: number;
+  vlrAbatCupom: number;
+  vlrResidPedidos: number;
+  cuponsPendentes: Cupom[];
+  pedidos: Pedido[];
 }
 
-export interface DetalhesSaldo{
-  representante :Representante;
+export interface DetalhesSaldo {
+  representante: Representante;
   cupons: Cupom[];
 }
 
 interface Historico {
-   id: number;
-   titCupId: number;
-   ttitCrId: number;
-   thistMovCrId: number;
-   dtMov: Date;
-   vlrMov: number;
-   vlrAb: number;
-   tpMov: string;
-   abatimentos: Abatimento[]
-}
-
-export interface TituloErp{
+  id: number;
   titCupId: number;
   ttitCrId: number;
-  numTit: string,
+  thistMovCrId: number;
+  dtMov: Date;
+  vlrMov: number;
+  vlrAb: number;
+  tpMov: string;
+  abatimentos: Abatimento[];
+}
+
+export interface TituloErp {
+  titCupId: number;
+  ttitCrId: number;
+  numTit: string;
   historicos: HistoricoErp[];
 }
 
-export interface TitulosPendentesErp{
+export interface TitulosPendentesErp {
   representante: Representante;
   titulos: TituloErp[];
 }
 interface HistoricoErp {
-      tfHistTitCupId: number;
-      dtMov: Date;
-      vlrMov: number;
-      vlrAbCup: number;
-      tpMov: string;
-    }
+  tfHistTitCupId: number;
+  dtMov: Date;
+  vlrMov: number;
+  vlrAbCup: number;
+  tpMov: string;
+}
 
 export interface Abatimento {
-    id: number;
-    pdvId?: number | null;
-    vlrPdv?: number | null;
-    numPedido?: number | null;
-    nf?: number | null;
-    vlrAbat: number;
-    dtAbat: Date; // Ou Date, se você fizer a conversão no parse do JSON
-    repId: number;
-    titCupId: number;
-    observacao?: string | null;
-    thistMovCrId : number | null
+  id: number;
+  pdvId?: number | null;
+  vlrPdv?: number | null;
+  numPedido?: number | null;
+  nf?: number | null;
+  vlrAbat: number;
+  dtAbat: Date; // Ou Date, se você fizer a conversão no parse do JSON
+  repId: number;
+  titCupId: number;
+  observacao?: string | null;
+  thistMovCrId: number | null;
 }
 
 interface Pedido {
@@ -139,14 +140,35 @@ interface Pedido {
   numNf: number;
   vlrPdv: number;
   vlrAbat: number;
+  vlrAb: number;
   dtAbat: Date;
 }
 
-export interface MovimentoBaixa{
+export interface MovimentoBaixa {
   numerosPedidos: number[];
   observacao: string;
   baixaAvulsa: {
-    codRep : string;
-    valor : number
-  } | null
+    codRep: string;
+    valor: number;
+  } | null;
+}
+
+export type payloadPesquisa = {
+  codigoRepr: number | null;
+  dataInicio: Date | null;
+  dataFim: Date | null;
+  numPedidoOrigem: number | null;
+  numPedidoAbatimento: number | null;
+};
+
+export type BaixasIndevidas = {
+    thistMovCrId: number;
+    titCrId: number;
+    titCupId: number;
+    numTit: number;
+    dtMov: Date;
+    vlrMov: number;
+    historico: string;
+    usuario: string;
+    representante: Representante | null;
 }

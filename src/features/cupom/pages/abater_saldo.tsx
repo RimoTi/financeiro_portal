@@ -116,7 +116,7 @@ export const AbaterSaldo: React.FC = () => {
             if (rep) {
                 setRepSaldo(rep);
             } else {
-                toast.warn("Representante não encontrado na lista.");
+                toast.warn("Representante sem saldo de cupom para abater.");
             }
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Erro ao registrar baixa");
@@ -200,7 +200,9 @@ export const AbaterSaldo: React.FC = () => {
                             <tr>
                                 <th style={styles.th}>Número</th>
                                 <th style={styles.th}>NF</th>
-                                <th style={styles.th}>Valor</th>
+                                <th style={styles.th}>Vlr Pdv </th>
+                                <th style={styles.th}>Vlr Pdv Pend</th>
+                                <th style={styles.th}>Vlr Abat</th>
                                 <th style={styles.th}>Status</th>
                             </tr>
                         </thead>
@@ -209,8 +211,10 @@ export const AbaterSaldo: React.FC = () => {
                                 <tr key={p.pdvId}>
                                     <td style={styles.td}>{p.numPedido}</td>
                                     <td style={styles.td}>{p.numNf}</td>
+                                    <td style={styles.td}>{formatMoney(p.vlrPdv)}</td>
+                                    <td style={styles.td}>{formatMoney(p.vlrAb)}</td>
                                     <td style={styles.td}>{formatMoney(p.vlrAbat)}</td>
-                                    <td style={styles.td}>{p.vlrAbat == 0 ? "-" : p.vlrAbat == p.vlrPdv ? "Total" : "Parcial"}</td>
+                                    <td style={styles.td}>{p.vlrAbat == 0 ? "-" : p.vlrAbat == p.vlrAb ? "Total" : "Parcial"}</td>
                                 </tr>
                             ))}
                         </tbody>

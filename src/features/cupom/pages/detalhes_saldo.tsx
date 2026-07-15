@@ -10,27 +10,44 @@ import { formatMoney, formatDate } from "@utils/functions";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { deleteAbatimento, getDetalhesSaldo } from "../cupom_service";
-import { DetalhesSaldo } from "../types";
+import { deleteAbatimento, getDetalhesCupom, getDetalhesSaldo } from "../cupom_service";
+import { Cupom, DetalhesSaldo } from "../types";
 import { Abatimento } from "../types"; // Sua interface definida anteriormente
 
 export const DetalhesSaldoCupons: React.FC = () => {
     const [dados, setDados] = useState<DetalhesSaldo | null>(null); // Agora é um objeto único
     const [activeKey, setActiveKey] = useState(1);
-    const { codRep } = useParams<{ codRep: string }>();
+    const { codRep, cupId } = useParams<{ codRep?: string, cupId?: string }>();
     const [loading, setLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
     const [pedidosSelecionados, setPedidosSelecionados] = useState<Abatimento[]>([]);
     const navigate = useNavigate()
 
     useEffect(() => {
-        if (!codRep) return;
+        // Se nenhum parâmetro foi passado, não faz nada
+        if (!codRep && !cupId) return;
 
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const data = await getDetalhesSaldo(codRep);
-                setDados(data);
+
+                if (codRep) {
+                    // Caso 1: Busca pelo Representante
+                    const data = await getDetalhesSaldo(codRep);
+                    setDados(data);
+                } else if (cupId) {
+                    // Caso 2: Busca pelo Cupom específico
+                    const data: Cupom = await getDetalhesCupom(cupId);
+                    const d: DetalhesSaldo = {
+                        cupons: [data],
+                        representante: data.representante || {
+                            id: 0,
+                            codRep: "",
+                            descRep: "Representante não informado"
+                        }
+                    };
+                    setDados(d);
+                }
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : "Erro inesperado");
             } finally {
@@ -39,7 +56,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
         };
 
         fetchData();
-    }, [codRep]);
+    }, [codRep, cupId]); // O useEffect reage a qualquer mudança nesses dois parâmetros
 
 
     const removerAbatimento = async (abatId: number) => {
@@ -73,8 +90,8 @@ export const DetalhesSaldoCupons: React.FC = () => {
                             historico: cupom.historico.map((mov) => ({
                                 ...mov,
                                 // Opcional: Se 'vlrMov' no histórico for a soma total, ajuste aqui:
-                                vlrAb: mov.vlrAb + pedidoParaRemover.vlrAbat ,
-                                vlrMov: mov.vlrMov - pedidoParaRemover.vlrAbat ,
+                                vlrAb: mov.vlrAb + pedidoParaRemover.vlrAbat,
+                                vlrMov: mov.vlrMov - pedidoParaRemover.vlrAbat,
                                 abatimentos: mov.abatimentos?.filter((a) => a.id !== abatId) || []
                             }))
                         };
@@ -172,7 +189,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
                                             <CTableHeaderCell>Data</CTableHeaderCell>
                                             <CTableHeaderCell>Tipo</CTableHeaderCell>
                                             <CTableHeaderCell>Valor Mov</CTableHeaderCell>
-                                            <CTableHeaderCell>Pedidos</CTableHeaderCell>
+                                            <CTableHeaderCell>Abatimentos</CTableHeaderCell>
                                         </CTableRow>
                                     </CTableHead>
                                     <CTableBody>
@@ -186,9 +203,9 @@ export const DetalhesSaldoCupons: React.FC = () => {
                                                         <button
                                                             onClick={() => verPedidos(mov.abatimentos)}
                                                             style={{ border: 'none', background: 'none', cursor: 'pointer' }}
-                                                            title="Ver Pedidos"
+                                                            title="Exibir"
                                                         >
-                                                            📰 Pedidos
+                                                            📰 Mostar
                                                         </button>
                                                     ) : (
                                                         <span className="text-muted">-</span>
@@ -205,7 +222,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
             ))}
             <CModal size="lg" visible={modalVisible} onClose={() => setModalVisible(false)}>
                 <CModalHeader closeButton>
-                    <CModalTitle>Pedidos Relacionados</CModalTitle>
+                    <CModalTitle>Abatimentos Relacionados</CModalTitle>
                 </CModalHeader>
                 <CModalBody>
                     <CTable hover responsive>
@@ -227,7 +244,6 @@ export const DetalhesSaldoCupons: React.FC = () => {
                                     <CTableDataCell>{formatDate(p.dtAbat.toString())}</CTableDataCell>
                                     <CTableDataCell>
                                         <CButton
-                                            disabled={p.thistMovCrId !== null}
                                             onClick={() => removerAbatimento(p.id)}>🗑️
                                         </CButton>
                                     </CTableDataCell>

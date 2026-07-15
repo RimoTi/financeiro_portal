@@ -5,7 +5,7 @@ export type UsuLogin = {
 };
 
 // Tipo completo do usuário retornado da API
-export type Usuario = {
+export interface Usuario {
   id: number;
   login: string;
   nome: string;
@@ -13,5 +13,8 @@ export type Usuario = {
   telefone: string;
   ativo: number;
   token?: string; // se a API retornar um token JWT
-  // adicione outros campos conforme o seu back-end
+  permissoes: string[];
 };
+
+
+
