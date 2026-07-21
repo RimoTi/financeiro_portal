@@ -1,17 +1,21 @@
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CButton } from "@coreui/react";
 import React, { useEffect, useState } from "react";
-import { formatMoney } from "@utils/functions"
-import { SaldoRepresentante } from "../types";
+import { formatMoney } from "@utils/functions";
+import { SaldoRepresentante, filterExtrato } from "../types";
 import { toast } from "react-toastify";
 import { getListaRepresentantes } from "../cupom_service";
 import { Spinner } from "@components/spinner";
 import { useNavigate } from "react-router-dom";
+import { ExtratoModal } from "./components/extrato_modal"; // Importe o modal que criamos acima
 
-// Supondo que seus dados venham em um array chamado 'data'
 export const ListaRepSaldo: React.FC = () => {
   const navigate = useNavigate();
-  const [data, setData] = useState<SaldoRepresentante[]>([])
+  const [data, setData] = useState<SaldoRepresentante[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Estados para controlar o Modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedCodRep, setSelectedCodRep] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchDados = async () => {
@@ -27,10 +31,29 @@ export const ListaRepSaldo: React.FC = () => {
       }
     };
     fetchDados();
-  }, [])
+  }, []);
 
+  // Abre o modal passando o código do representante da linha clicada
+  const abrirModalExtrato = (codRep: string) => {
+    setSelectedCodRep(codRep);
+    setModalVisible(true);
+  };
 
-  if (loading) return <Spinner text="buscando dados" />
+  const fecharModal = () => {
+    setModalVisible(false);
+    setSelectedCodRep(null);
+  };
+
+  // Executado ao clicar em "Gerar Extrato" dentro do modal
+  const handleGerarExtrato = (filtro: filterExtrato) => {
+    fecharModal();
+    // Exemplo: Navegar para a tela de extrato passando os dados ou parâmetros via state/rota
+     navigate(`/extrato/representante`, { state: filtro });
+    //console.log("Filtro gerado:", filtro);
+  };
+
+  if (loading) return <Spinner text="buscando dados" />;
+
   return (
     <div style={{ padding: "20px" }}>
       <h4 style={{ marginBottom: "20px" }}>Saldos dos Representantes</h4>
@@ -49,17 +72,34 @@ export const ListaRepSaldo: React.FC = () => {
                       {formatMoney(item.saldo)}
                     </div>
                   </div>
-                  <CButton color="primary" variant="outline" size="sm"
-                    onClick={() => navigate(`/detalhes/saldo/representante/${item.representante.codRep}`)}
-                  >
-                    Ver Detalhes
-                  </CButton>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <CButton color="primary" variant="outline" size="sm"
+                      onClick={() => navigate(`/detalhes/saldo/representante/${item.representante.codRep}`)}
+                    >
+                      Ver Detalhes
+                    </CButton>
+                    <CButton color="secondary" variant="outline" size="sm"
+                      onClick={() => abrirModalExtrato(item.representante.codRep)}
+                    >
+                      Extrato
+                    </CButton>
+                  </div>
                 </div>
               </CCardBody>
             </CCard>
           </CCol>
         ))}
       </CRow>
+
+      {/* Renderização do Modal */}
+      {selectedCodRep !== null && (
+        <ExtratoModal
+          visible={modalVisible}
+          onClose={fecharModal}
+          codRep={selectedCodRep}
+          onConfirm={handleGerarExtrato}
+        />
+      )}
     </div>
   );
 };

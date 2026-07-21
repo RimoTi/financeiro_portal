@@ -1,5 +1,5 @@
 import api from '../../services/api';
-import { Abatimento, DadosGerarCupon, DetalhesSaldo, SaldoRepresentante, MovimentoBaixa, TitulosPendentesErp, Cupom, payloadPesquisa, BaixasIndevidas } from './types';
+import { Abatimento, DadosGerarCupon, DetalhesSaldo, SaldoRepresentante, MovimentoBaixa, TitulosPendentesErp, Cupom, payloadPesquisa, BaixasIndevidas, filterExtrato, Extrato } from './types';
 
 export async function getCuponsPedidosNaoGerados(): Promise<DadosGerarCupon[]> {
     const response = await api.get<DadosGerarCupon[]>(
@@ -95,5 +95,29 @@ export async function getBaixasIndevidas(): Promise<BaixasIndevidas[]> {
       "/Cupon/BaixasNaoReconhecidas"
     );
     return response.data as unknown as BaixasIndevidas[];
+}
+
+export async function getExtrato(data: filterExtrato): Promise<Extrato> {
+  // 1. Formata as datas para o padrão DD/MM/YYYY
+  // Certifique-se de que sua função formatDate retorna exatamente nesse formato
+  const formatForApi = (date: Date) => {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  };
+
+  // 2. Constrói os parâmetros da URL
+  const params = new URLSearchParams({
+    dtInicio: formatForApi(data.dataIni),
+    dtFim: formatForApi(data.dataFim),
+    codRep: String(data.codRep)
+  });
+
+  // 3. Faz a chamada usando os parâmetros
+  const response = await api.get<Extrato>(`Cupon/Extrato?${params.toString()}`);
+  
+  return response.data;
+  
 }
 

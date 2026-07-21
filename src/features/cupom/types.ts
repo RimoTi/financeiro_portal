@@ -172,3 +172,24 @@ export type BaixasIndevidas = {
     usuario: string;
     representante: Representante | null;
 }
+
+export type Extrato = {
+  representante: Representante;
+  movimentos : Movimento[]
+}
+
+
+type Movimento = {
+  titCupId: number;
+  numTit: number;
+  numPedido: number | null;
+  dtMov: string;
+  vlrMov: number;
+  tpMov: string;
+}
+
+export type filterExtrato = {
+  codRep: string;
+  dataIni : Date;
+  dataFim: Date;
+}

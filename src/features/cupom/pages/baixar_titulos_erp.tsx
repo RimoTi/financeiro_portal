@@ -97,11 +97,8 @@ export const ListaTitulosPendentesErp: React.FC = () => {
                         ))}
                       </CTableBody>
                     </CTable> 
-                    {usuario && hasPermission(usuario, TipoMenu.CupomDesconto) && (
-                      <CButton onClick={() => navigate(`/detalhes/saldo/cupom/${tit.titCupId}`)} style={{ marginRight: "20px", width:"150px" }} color="primary" >Detalhes</CButton>
-                    )}   
-                  </CAccordionBody>      
-                              
+                      <CButton onClick={() => navigate(`/detalhes/saldo/cupom/${tit.titCupId}`)} style={{ marginRight: "20px", width:"150px" }} color="secondary" >Detalhes</CButton>
+                  </CAccordionBody>    
                 </CAccordionItem>
               ))}
             </CAccordion>
@@ -109,7 +106,6 @@ export const ListaTitulosPendentesErp: React.FC = () => {
            {usuario && hasPermission(usuario, TipoMenu.TitulosFinanceiro) && (
             <CButton onClick={() => baixarTitulos(rep.representante.id)} style={{ margin: "20px", width:"150px" }} color="primary" >Baixar</CButton>
           )}
-       
         </CCard>
       ))}
     </div>

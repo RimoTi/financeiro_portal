@@ -22,6 +22,7 @@ const DetalhesSaldoCupons = lazy(()=> import("@features/cupom/pages/detalhes_sal
 const ListaTitulosPendentesErp = lazy(()=> import("@features/cupom/pages/baixar_titulos_erp").then(m=>({default: m.ListaTitulosPendentesErp})));
 const PesquisaCupons = lazy(()=> import("@features/cupom/pages/pesquisa_cupons").then(m=>({default: m.PesquisaCupons})));
 const MsgErro = lazy(()=> import("@features/cupom/pages/msg_erro").then(m=>({default: m.MsgErro})));
+const ExtratoRep = lazy(()=> import("@features/cupom/pages/extrato_representante").then(m=>({default: m.ExtratoRepresentante})));
 
 const withSuspense = (element: JSX.Element) => (
   <Suspense fallback={<div>Carregando...</div>}>{element}</Suspense>
@@ -57,6 +58,7 @@ export const AppRoutes = createBrowserRouter([
           { path: "/Pendentes/Baixa/Erp", element:withSuspense(<ListaTitulosPendentesErp/>)},
           { path: "/pesquisar/cupons", element:withSuspense(<PesquisaCupons/>)},
           { path: "/mensagem/erro/baixaIndevida", element:withSuspense(<MsgErro/>)},
+          { path: "/extrato/representante", element:withSuspense(<ExtratoRep/>)},
         ],
       },
     ],
