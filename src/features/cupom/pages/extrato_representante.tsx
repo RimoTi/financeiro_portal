@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { Spinner } from '@components/spinner';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CButton } from '@coreui/react';
+import { BarraMovimentacao } from './components/barra_mov_extrato';
 
 // Definindo a interface das Props corretamente
 
@@ -38,57 +39,98 @@ export const ExtratoRepresentante: React.FC = () => {
     if (!data) return <h2>Sem dados para exibir!</h2>;
 
     // Cálculo do saldo total
-    const saldoFinal = data.movimentos.reduce((acc, mov) => acc + mov.vlrMov, 0);
+    const totalMov = data.movimentos.reduce((acc, mov) => acc + mov.vlrMov, 0);
+    const saldoFinal = data.movimentos.reduce((acc, mov) => acc + mov.vlrMov, 0) + data.saldoInicial;
 
     return (
-        <div style={styles.container}>
-            <header style={styles.header}>
-                <div>
-                    <h2 style={styles.title}>Extrato de Cupons</h2>
-                    <p style={styles.repInfo}>{data.representante.codRep} - {data.representante.descRep}</p>
-                </div>
-
-                <CButton
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(-1)}
-                >
-                    Voltar
-                </CButton>
-            </header>
-
-            <div style={styles.table}>
-                <div style={styles.tableHeader}>
-                    <span>Data</span>
-                    <span>Tipo</span>
-                    <span>Pedido</span>
-                    <span style={{ textAlign: 'right' }}>Valor</span>
-                </div>
-
-                {data.movimentos.map((mov, index) => (
-                    <div key={index} style={styles.row}>
-                        <span>{formatDate(mov.dtMov)}</span>
-                        <span style={styles.type}>{mov.tpMov.replace('_', ' ')}</span>
-                        <span>{mov.numPedido || '-'}</span>
-                        <span style={{
-                            ...styles.value,
-                            color: mov.vlrMov >= 0 ? '#27ae60' : '#c0392b'
-                        }}>
-                            {mov.vlrMov >= 0 ? '+' : ''}{formatMoney(mov.vlrMov)}
-                        </span>
+        <div>
+            <div style={styles.container}>
+                <header style={styles.header}>
+                    <div>
+                        <h2 style={styles.title}>Extrato de Cupons</h2>
+                        <p style={styles.repInfo}>{data.representante.codRep} - {data.representante.descRep}</p>
                     </div>
-                ))}
-            </div>
 
-            <div style={styles.footer}>
-                <span>Saldo Disponível:</span>
-                <span style={{
-                    ...styles.value,
-                    color: saldoFinal >= 0 ? '#27ae60' : '#c0392b'
-                }}>
-                    {formatMoney(saldoFinal)}
-                </span>
+                    <CButton
+                        color="secondary"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(-1)}
+                    >
+                        Voltar
+                    </CButton>
+                </header>
+<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', gap: '16px' }}>
+    {/* Saldo Anterior */}
+    <div style={{ 
+        flex: 1, 
+        backgroundColor: '#f8fafc', 
+        padding: '10px 16px', 
+        borderRadius: '8px', 
+        borderLeft: '4px solid #64748b' 
+    }}>
+        <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 'bold' }}>
+            Saldo Anterior
+        </span>
+        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1e293b' }}>
+            {formatMoney(data.saldoInicial)}
+        </span>
+    </div>
+
+    {/* Saldo Final */}
+    <div style={{ 
+        flex: 1, 
+        backgroundColor: '#f8fafc', 
+        padding: '10px 16px', 
+        borderRadius: '8px', 
+        borderLeft: `4px solid ${saldoFinal >= 0 ? '#27ae60' : '#c0392b'}` 
+    }}>
+        <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 'bold' }}>
+            Saldo Final
+        </span>
+        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: saldoFinal >= 0 ? '#27ae60' : '#c0392b' }}>
+            {formatMoney(saldoFinal)}
+        </span>
+    </div>
+</div>
+
+<BarraMovimentacao data={data}/>
+            </div>
+            <div style={styles.container}>
+
+
+                <div style={styles.table}>
+                    <div style={styles.tableHeader}>
+                        <span>Data</span>
+                        <span>Tipo</span>
+                        <span>Pedido</span>
+                        <span style={{ textAlign: 'right' }}>Valor</span>
+                    </div>
+
+                    {data.movimentos.map((mov, index) => (
+                        <div key={index} style={styles.row}>
+                            <span>{formatDate(mov.dtMov)}</span>
+                            <span style={styles.type}>{mov.tpMov.replace('_', ' ')}</span>
+                            <span>{mov.numPedido || '-'}</span>
+                            <span style={{
+                                ...styles.value,
+                                color: mov.vlrMov >= 0 ? '#27ae60' : '#c0392b'
+                            }}>
+                                {mov.vlrMov >= 0 ? '+' : ''}{formatMoney(mov.vlrMov)}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
+                <div style={styles.footer}>
+                    <span>Total:</span>
+                    <span style={{
+                        ...styles.value,
+                        color: saldoFinal >= 0 ? '#27ae60' : '#c0392b'
+                    }}>
+                        {formatMoney(totalMov)}
+                    </span>
+                </div>
             </div>
         </div>
     );

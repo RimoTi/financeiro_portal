@@ -98,19 +98,11 @@ export async function getBaixasIndevidas(): Promise<BaixasIndevidas[]> {
 }
 
 export async function getExtrato(data: filterExtrato): Promise<Extrato> {
-  // 1. Formata as datas para o padrão DD/MM/YYYY
-  // Certifique-se de que sua função formatDate retorna exatamente nesse formato
-  const formatForApi = (date: Date) => {
-    const d = String(date.getDate()).padStart(2, '0');
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}/${m}/${y}`;
-  };
 
   // 2. Constrói os parâmetros da URL
   const params = new URLSearchParams({
-    dtInicio: formatForApi(data.dataIni),
-    dtFim: formatForApi(data.dataFim),
+    mes: data.mes.toString(),
+    ano: data.ano.toString(),
     codRep: String(data.codRep)
   });
 

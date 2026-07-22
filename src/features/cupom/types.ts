@@ -175,6 +175,7 @@ export type BaixasIndevidas = {
 
 export type Extrato = {
   representante: Representante;
+  saldoInicial:number;
   movimentos : Movimento[]
 }
 
@@ -186,10 +187,11 @@ type Movimento = {
   dtMov: string;
   vlrMov: number;
   tpMov: string;
+  natMov: string;
 }
 
 export type filterExtrato = {
   codRep: string;
-  dataIni : Date;
-  dataFim: Date;
+  mes : number;
+  ano: number;
 }

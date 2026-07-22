@@ -43,7 +43,7 @@ export const MsgErro: React.FC = () => {
 
   return (
     <CRow>
-      <h3>Movimentações feitas fora de nosso controle</h3>
+      <h3 style={{color:"red", fontSize:"45px"}}>⚠️ Movimentações feitas fora de nosso controle!</h3>
       {dados.map((item) => (
         <CCol xs={12} md={6} lg={4} key={item.thistMovCrId} className="mb-4">
           <CCard className="h-100 shadow-sm">
