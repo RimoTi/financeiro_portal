@@ -10,7 +10,7 @@ import { formatMoney, formatDate } from "@utils/functions";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { deleteAbatimento, getDetalhesCupom, getDetalhesSaldo } from "../cupom_service";
+import { deletePedido, getDetalhesCupom, getDetalhesSaldo } from "../cupom_service";
 import { Cupom, DetalhesSaldo } from "../types";
 import { Abatimento } from "../types"; // Sua interface definida anteriormente
 
@@ -59,7 +59,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
     }, [codRep, cupId]); // O useEffect reage a qualquer mudança nesses dois parâmetros
 
 
-    const removerAbatimento = async (abatId: number) => {
+    const removerAbatimento = async (numPedido: number) => {
         try {
             if (!window.confirm("Essa ação não poderá ser desfeita. Continuar?")) {
                 return;
@@ -67,10 +67,10 @@ export const DetalhesSaldoCupons: React.FC = () => {
             setLoading(true);
 
             // Localiza o pedido antes de removê-lo para ter o valor do abatimento
-            const pedidoParaRemover = pedidosSelecionados.find(p => p.id === abatId);
+            const pedidoParaRemover = pedidosSelecionados.find(p => p.numPedido === numPedido);
             if (!pedidoParaRemover) return;
 
-            const mensagem = await deleteAbatimento(abatId);
+            const mensagem = await deletePedido(numPedido);
 
             setDados((prev) => {
                 if (!prev) return null;
@@ -79,7 +79,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
                 novaEstrutura.cupons = novaEstrutura.cupons.map((cupom) => {
                     // Verifica se este cupom contém o movimento que está sendo alterado
                     const contemMovimento = cupom.historico.some(m =>
-                        m.abatimentos?.some(a => a.id === abatId)
+                        m.abatimentos?.some(a => a.numPedido === numPedido)
                     );
 
                     if (contemMovimento) {
@@ -92,7 +92,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
                                 // Opcional: Se 'vlrMov' no histórico for a soma total, ajuste aqui:
                                 vlrAb: mov.vlrAb + pedidoParaRemover.vlrAbat,
                                 vlrMov: mov.vlrMov - pedidoParaRemover.vlrAbat,
-                                abatimentos: mov.abatimentos?.filter((a) => a.id !== abatId) || []
+                                abatimentos: mov.abatimentos?.filter((a) => a.numPedido !== numPedido) || []
                             }))
                         };
                     }
@@ -102,7 +102,12 @@ export const DetalhesSaldoCupons: React.FC = () => {
                 return novaEstrutura;
             });
 
-            setPedidosSelecionados((prev) => prev.filter((p) => p.id !== abatId));
+            if(pedidosSelecionados.length == 1){
+                setModalVisible(false);
+            }
+
+            setPedidosSelecionados((prev) => prev.filter((p) => p.numPedido !== numPedido));
+
             toast.info(mensagem);
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Erro ao remover");
@@ -244,7 +249,7 @@ export const DetalhesSaldoCupons: React.FC = () => {
                                     <CTableDataCell>{formatDate(p.dtAbat.toString())}</CTableDataCell>
                                     <CTableDataCell>
                                         <CButton
-                                            onClick={() => removerAbatimento(p.id)}>🗑️
+                                            onClick={() => removerAbatimento(p.numPedido || 0)}>🗑️
                                         </CButton>
                                     </CTableDataCell>
                                 </CTableRow>

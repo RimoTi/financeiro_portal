@@ -40,26 +40,39 @@ export const AbaterSaldo: React.FC = () => {
         }
     };
 
-    const registrarBaixas = async (repId: number) => {
-
+   const registrarBaixas = async (repId: number) => {
         const confirmado = window.confirm("Você tem certeza que deseja baixar os pedidos?");
 
         if (!confirmado) {
             return; // Interrompe a execução se o usuário clicar em Cancelar
         }
-        const pedidosArray = abatimentos.find(x => x.representante.id == repId)?.pedidos.map(p => p.numPedido) ?? [];;
+
+        const pedidosArray = abatimentos.find(x => x.representante.id == repId)?.pedidos.map(p => p.numPedido) ?? [];
+
+        if (pedidosArray.length === 0) {
+            toast.warn("Nenhum pedido encontrado para baixar.");
+            return;
+        }
+
         try {
             setLoading(true);
-            const data: MovimentoBaixa = {
-                numerosPedidos: pedidosArray,
-                observacao: "",
-                baixaAvulsa: null
-            };
-            const response = await baixarCupons(data);
-            toast.success(response);
-            setAbatimentos(abatimentos.filter(a => a.representante.id != repId))
-            console.log(data)
+
+            for (const pdv of pedidosArray) {
+                const data: MovimentoBaixa = {
+                    numerosPedidos: [pdv], 
+                    observacao: "",
+                    baixaAvulsa: null
+                };
+
+                const response = await baixarCupons(data);
+                console.log(`Pedido ${pdv} baixado com sucesso:`, response);
+            }
+
+            // Sucesso geral após todos os pedidos do array serem processados
+            toast.success("Todas as baixas foram registradas com sucesso!");
+            setAbatimentos(abatimentos.filter(a => a.representante.id != repId));
             window.dispatchEvent(new CustomEvent("atualizarSidebar"));
+
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Erro ao registrar baixa");
         } finally {

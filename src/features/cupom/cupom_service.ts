@@ -59,9 +59,9 @@ export async function getCuponsPendentesBaixarNoErp(): Promise<TitulosPendentesE
     return response.data as unknown as TitulosPendentesErp[];
 }
 
-export async function deleteAbatimento(abatId:number): Promise<string> {
+export async function deletePedido(numPedido:number): Promise<string> {
   const response = await api.delete<string>(
-      `/Cupon/ExcluirAbatimento/${abatId}`
+      `/Cupon/ExcluirPedido/${numPedido}`
     );
     return response.data as unknown as string;
 }
