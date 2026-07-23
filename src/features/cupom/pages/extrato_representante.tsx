@@ -1,6 +1,6 @@
 import { formatDate, formatMoney } from '@utils/functions';
 import React, { CSSProperties, useEffect, useState } from 'react';
-import { Extrato, filterExtrato } from '../types';
+import { Extrato, filterExtrato, Movimento } from '../types';
 import { getExtrato } from '../cupom_service';
 import { toast } from 'react-toastify';
 import { Spinner } from '@components/spinner';
@@ -8,15 +8,25 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CButton } from '@coreui/react';
 import { BarraMovimentacao } from './components/barra_mov_extrato';
 
-// Definindo a interface das Props corretamente
-
+type MovimentoAgrupado = {
+    chave: string;
+    dtMov: string;
+    tpMov: string;
+    numPedido: number | null;
+    vlrMov: number;
+    itens: Movimento[]; // Lista original dos movimentos que compõem este grupo
+};
 
 export const ExtratoRepresentante: React.FC = () => {
     const [data, setData] = useState<Extrato | null>(null);
     const [loading, setLoading] = useState(true);
     const location = useLocation();
-    const [dataRequest, setDataRequest] = useState<filterExtrato | null>(location.state || null)
+    const [dataRequest, setDataRequest] = useState<filterExtrato | null>(location.state || null);
     const navigate = useNavigate();
+
+    // Estado para controlar qual chave está expandida (null se nenhuma)
+    const [chaveExpandida, setChaveExpandida] = useState<string | null>(null);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -38,9 +48,35 @@ export const ExtratoRepresentante: React.FC = () => {
     if (loading) return <Spinner text="buscando dados" />;
     if (!data) return <h2>Sem dados para exibir!</h2>;
 
-    // Cálculo do saldo total
     const totalMov = data.movimentos.reduce((acc, mov) => acc + mov.vlrMov, 0);
-    const saldoFinal = data.movimentos.reduce((acc, mov) => acc + mov.vlrMov, 0) + data.saldoInicial;
+    const saldoFinal = totalMov + data.saldoInicial;
+
+    // Agrupamento por Data, Tipo e Pedido
+    const movimentosAgrupados = data.movimentos.reduce((acc, mov) => {
+        const chave = `${mov.dtMov}_${mov.tpMov}_${mov.numPedido || 'sem-pedido'}`;
+
+        if (!acc[chave]) {
+            acc[chave] = {
+                chave,
+                dtMov: mov.dtMov,
+                tpMov: mov.tpMov,
+                numPedido: mov.numPedido,
+                vlrMov: mov.vlrMov,
+                itens: [mov]
+            };
+        } else {
+            acc[chave].vlrMov += mov.vlrMov;
+            acc[chave].itens.push(mov);
+        }
+
+        return acc;
+    }, {} as Record<string, MovimentoAgrupado>);
+
+    const movimentosLista = Object.values(movimentosAgrupados);
+
+    const toggleExpand = (chave: string) => {
+        setChaveExpandida(prev => (prev === chave ? null : chave));
+    };
 
     return (
         <div>
@@ -60,44 +96,43 @@ export const ExtratoRepresentante: React.FC = () => {
                         Voltar
                     </CButton>
                 </header>
-<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', gap: '16px' }}>
-    {/* Saldo Anterior */}
-    <div style={{ 
-        flex: 1, 
-        backgroundColor: '#f8fafc', 
-        padding: '10px 16px', 
-        borderRadius: '8px', 
-        borderLeft: '4px solid #64748b' 
-    }}>
-        <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 'bold' }}>
-            Saldo Anterior
-        </span>
-        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1e293b' }}>
-            {formatMoney(data.saldoInicial)}
-        </span>
-    </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', gap: '16px' }}>
+                    {/* Saldo Anterior */}
+                    <div style={{
+                        flex: 1,
+                        backgroundColor: '#f8fafc',
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        borderLeft: '4px solid #64748b'
+                    }}>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                            Saldo Anterior
+                        </span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#1e293b' }}>
+                            {formatMoney(data.saldoInicial)}
+                        </span>
+                    </div>
 
-    {/* Saldo Final */}
-    <div style={{ 
-        flex: 1, 
-        backgroundColor: '#f8fafc', 
-        padding: '10px 16px', 
-        borderRadius: '8px', 
-        borderLeft: `4px solid ${saldoFinal >= 0 ? '#27ae60' : '#c0392b'}` 
-    }}>
-        <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 'bold' }}>
-            Saldo Final
-        </span>
-        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: saldoFinal >= 0 ? '#27ae60' : '#c0392b' }}>
-            {formatMoney(saldoFinal)}
-        </span>
-    </div>
-</div>
+                    {/* Saldo Final */}
+                    <div style={{
+                        flex: 1,
+                        backgroundColor: '#f8fafc',
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        borderLeft: `4px solid ${saldoFinal >= 0 ? '#27ae60' : '#c0392b'}`
+                    }}>
+                        <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', textTransform: 'uppercase', fontWeight: 'bold' }}>
+                            Saldo Final
+                        </span>
+                        <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: saldoFinal >= 0 ? '#27ae60' : '#c0392b' }}>
+                            {formatMoney(saldoFinal)}
+                        </span>
+                    </div>
+                </div>
 
-<BarraMovimentacao data={data}/>
+                <BarraMovimentacao data={data} />
             </div>
             <div style={styles.container}>
-
 
                 <div style={styles.table}>
                     <div style={styles.tableHeader}>
@@ -107,19 +142,59 @@ export const ExtratoRepresentante: React.FC = () => {
                         <span style={{ textAlign: 'right' }}>Valor</span>
                     </div>
 
-                    {data.movimentos.map((mov, index) => (
-                        <div key={index} style={styles.row}>
-                            <span>{formatDate(mov.dtMov)}</span>
-                            <span style={styles.type}>{mov.tpMov.replace('_', ' ')}</span>
-                            <span>{mov.numPedido || '-'}</span>
-                            <span style={{
-                                ...styles.value,
-                                color: mov.vlrMov >= 0 ? '#27ae60' : '#c0392b'
-                            }}>
-                                {mov.vlrMov >= 0 ? '+' : ''}{formatMoney(mov.vlrMov)}
-                            </span>
-                        </div>
-                    ))}
+                    {movimentosLista.map((grupo) => {
+                        const isExpanded = chaveExpandida === grupo.chave;
+
+                        return (
+                            <React.Fragment key={grupo.chave}>
+                                {/* Linha Agrupada (Clicável) */}
+                                <div 
+                                    style={{
+                                        ...styles.row, 
+                                        backgroundColor: isExpanded ? '#f1f5f9' : 'transparent',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => toggleExpand(grupo.chave)}
+                                    title="Clique para ver os detalhes"
+                                >
+                                    <span>{formatDate(grupo.dtMov)}</span>
+                                    <span style={styles.type}>
+                                        {grupo.tpMov.replace('_', ' ')} 
+                                        <span style={{ fontSize: '0.75em', color: '#888', marginLeft: '6px' }}>
+                                            {isExpanded ? '▲' : '▼'}
+                                        </span>
+                                    </span>
+                                    <span>{grupo.numPedido || '-'}</span>
+                                    <span style={{
+                                        ...styles.value,
+                                        color: grupo.vlrMov >= 0 ? '#27ae60' : '#c0392b'
+                                    }}>
+                                        {grupo.vlrMov >= 0 ? '+' : ''}{formatMoney(grupo.vlrMov)}
+                                    </span>
+                                </div>
+
+                                {/* Detalhes Expandidos */}
+                                {isExpanded && (
+                                    <div style={styles.detailsContainer}>
+                                        <div style={styles.detailsHeader}>
+                                            <span>Nº Título</span>
+                                            <span>Natureza</span>
+                                            <span style={{ textAlign: 'right' }}>Valor Individual</span>
+                                        </div>
+                                        {grupo.itens.map((item) => (
+                                            <div key={item.titCupId} style={styles.detailsRow}>
+                                                <span>{item.numTit}</span>
+                                                <span>{item.natMov}</span>
+                                                <span style={{ textAlign: 'right', color: item.vlrMov >= 0 ? '#27ae60' : '#c0392b' }}>
+                                                    {item.vlrMov >= 0 ? '+' : ''}{formatMoney(item.vlrMov)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
 
                 <div style={styles.footer}>
@@ -171,7 +246,29 @@ const styles: { [key: string]: CSSProperties } = {
         gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr',
         padding: '12px 10px',
         borderBottom: '1px solid #f1f1f1',
-        alignItems: 'center'
+        alignItems: 'center',
+        transition: 'background-color 0.2s'
+    },
+    detailsContainer: {
+        backgroundColor: '#f8fafc',
+        padding: '10px 20px',
+        borderBottom: '1px solid #e2e8f0',
+        fontSize: '0.9em'
+    },
+    detailsHeader: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr 1fr',
+        fontWeight: 'bold',
+        color: '#64748b',
+        paddingBottom: '6px',
+        borderBottom: '1px solid #e2e8f0',
+        marginBottom: '6px'
+    },
+    detailsRow: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr 1fr',
+        padding: '6px 0',
+        color: '#334155'
     },
     footer: {
         display: 'grid',
