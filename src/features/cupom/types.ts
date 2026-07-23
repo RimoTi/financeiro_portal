@@ -105,6 +105,7 @@ export interface TituloErp {
   titCupId: number;
   ttitCrId: number;
   numTit: string;
+  parcela: number;
   historicos: HistoricoErp[];
 }
 
