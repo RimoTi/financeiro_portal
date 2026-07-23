@@ -181,7 +181,7 @@ export type Extrato = {
 }
 
 
-type Movimento = {
+export type Movimento = {
   titCupId: number;
   numTit: number;
   numPedido: number | null;
