@@ -29,9 +29,9 @@ export const ExtratoRepresentante: React.FC = () => {
 
     useEffect(() => {
         const fetchData = async () => {
+            if (dataRequest == null) return;
+            setLoading(true);
             try {
-                if (dataRequest == null) return;
-                setLoading(true);
                 const result = await getExtrato(dataRequest);
                 setData(result);
             } catch (error) {
@@ -43,7 +43,7 @@ export const ExtratoRepresentante: React.FC = () => {
         };
 
         fetchData();
-    }, [dataRequest]);
+    }, [dataRequest]); // Incluímos dataRequest aqui caso ela mude de valor posteriormente
 
     if (loading) return <Spinner text="buscando dados" />;
     if (!data) return <h2>Sem dados para exibir!</h2>;
@@ -148,9 +148,9 @@ export const ExtratoRepresentante: React.FC = () => {
                         return (
                             <React.Fragment key={grupo.chave}>
                                 {/* Linha Agrupada (Clicável) */}
-                                <div 
+                                <div
                                     style={{
-                                        ...styles.row, 
+                                        ...styles.row,
                                         backgroundColor: isExpanded ? '#f1f5f9' : 'transparent',
                                         cursor: 'pointer'
                                     }}
@@ -159,7 +159,7 @@ export const ExtratoRepresentante: React.FC = () => {
                                 >
                                     <span>{formatDate(grupo.dtMov)}</span>
                                     <span style={styles.type}>
-                                        {grupo.tpMov.replace('_', ' ')} 
+                                        {grupo.tpMov.replace('_', ' ')}
                                         <span style={{ fontSize: '0.75em', color: '#888', marginLeft: '6px' }}>
                                             {isExpanded ? '▲' : '▼'}
                                         </span>
