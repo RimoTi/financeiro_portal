@@ -2,6 +2,7 @@
 import { JSX, lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
+//Conciliacao de Cartão de Crédito
 const Layout = lazy(() => import("@components/layout").then(m => ({ default: m.Layout })));
 const PrivateRoute = lazy(() => import("./PrivateRoute").then(m => ({ default: m.PrivateRoute })));
 const Login = lazy(() => import("@features/auth/pages/Login").then(m => ({ default: m.Login })));
@@ -13,7 +14,9 @@ const PendentesBaixa = lazy(() => import("@features/consciliacao/pages/pendentes
 const ImportCsvEcommerce = lazy(() => import("@features/ecommerce/pages/baixarTitulosEcommerce").then(m => ({ default: m.ImportCsvEcommerce })));
 const ResultadoBaixaTitulos = lazy(() => import("@features/consciliacao/pages/resultadoBaixaTitulos").then(m => ({ default: m.ResultadoBaixaTitulos })));
 const HistoricoMov = lazy(() => import("@features/consciliacao/pages/historicoMov").then(m => ({ default: m.HistoricoMov })));
+const ConfirmarExclusaoConciliacao = lazy(() => import("@features/consciliacao/pages/confirmarExclusaoConciliacao").then(m => ({ default: m.ConfirmarExclusaoConciliacao })));
 
+//Cupons de Dedsconto
 const ListaRepSaldo = lazy(()=> import("@features/cupom/pages/lista_rep_saldo").then(m=>({default: m.ListaRepSaldo})));
 const GerarCupons = lazy(()=> import("@features/cupom/pages/cupons_a_gerar").then(m=>({default: m.GerarCupons})));
 const DetalhesCupom = lazy(()=> import("@features/cupom/pages/detalhes_cupom_a_gerar").then(m=>({default: m.DetalhesCupom})));
@@ -48,6 +51,7 @@ export const AppRoutes = createBrowserRouter([
           { path: "/baixar/ecommerce", element: withSuspense(<ImportCsvEcommerce />) },
           { path: "/consciliacao/retorno", element: withSuspense(<ResultadoBaixaTitulos />) },
           { path: "/consciliacao/historico", element: withSuspense(<HistoricoMov />) },
+          { path: "/consciliacao/confirmarExclusao", element: withSuspense(<ConfirmarExclusaoConciliacao />) },
           
           { path: "/listar/representantes/saldo", element:withSuspense(<ListaRepSaldo/>)},
           { path: "/cupons/a/gerar", element:withSuspense(<GerarCupons/>)},

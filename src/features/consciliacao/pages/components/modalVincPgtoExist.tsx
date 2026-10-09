@@ -42,7 +42,8 @@ export const ModalVincularPagamentoExistente: React.FC<Props> = ({
                     numAutorizacao: pagamento.numAutorizacao,
                     totalParc: pagamento.totalParcela,
                     vlrTotal: pagamento.valorParcelaLiquido,
-                    DataUltParc: pagamento.dataPagamento
+                    dataUltParc: pagamento.dataPagamento,
+                    idVenda: pagamento.idVenda,
                 }
 
                 vincularExistente(data.id, autorizacao);

@@ -39,15 +39,17 @@ export interface Conciliacao {
   totalNotas:number,
   vlrTotalAutoriz:number,
   vlrAbNotas:number,
-  Finalizada:number,
+  finalizada:number,
   totalAutoriz:number,
-  DataUltParc:Date | null,
+  dataUltParc:Date | null,
   autorizacoes: Autorizacao[];
-  notas: NotaFiscal[]
+  notas: NotaFiscal[] ;
 }
+
+
 export interface NotaFiscal {
   id: number;
-  concId: number;
+  concId: number | null;
   numNf: number;
   chaveAcesso: number;
   nome: string;
@@ -62,7 +64,8 @@ export interface Autorizacao {
   numAutorizacao: string,
   totalParc: number;
   vlrTotal: number;
-  DataUltParc:Date | null,
+  dataUltParc:Date | null,
+  idVenda: string;
 }
 
 export type ApiResquestGetNota = {
@@ -98,4 +101,9 @@ interface IBaixa {
   data: string;
   tipoMovimento: string;
   usuario: string;
+}
+
+export interface IValidarAutorExistente {
+  numAutorizacao: string;
+  idVenda: string;
 }

@@ -1,6 +1,6 @@
 import api from '../../services/api';
 import axios from "axios";
-import { Autorizacao, Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento } from './types';
+import { Autorizacao, Conciliacao, INotaFiscalHistorico, NotaFiscal, Pagamento, IValidarAutorExistente } from './types';
 import { ApiResquestGetNota } from './types';
 
 
@@ -9,7 +9,6 @@ type ApiResponse = {
   message: string;
 };
 
-type ListaAutorizacaoResponse = string[];
 
 
 // 🔥 função 3
@@ -112,14 +111,14 @@ export const mapCsvToDto = (
     }));
 };
 
-export async function TestarAutorizacaoExistente(numAutorizacoes: string[]): Promise<string[]> {
+export async function TestarAutorizacaoExistente(numAutorizacoes: IValidarAutorExistente[]): Promise<IValidarAutorExistente[]> {
   try {
-    const response = await api.post<ListaAutorizacaoResponse>(
+    const response = await api.post<IValidarAutorExistente[]>(
       "/Conciliacao/SemPreVinculo",
       numAutorizacoes
     );
 
-    return response.data || [];
+    return response.data as IValidarAutorExistente[];
 
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
@@ -180,6 +179,34 @@ export async function baixarTitulosPendente(data: number[], dataBaixa: string): 
 
   }
 }
+
+export async function getConciliacaoByNota(numNf: number): Promise<Conciliacao> {
+  try {
+    const response = await api.get<Conciliacao>(
+      "/Conciliacao/ObterPorNota?numNf=" + numNf
+    );
+    return response.data as Conciliacao;
+  }
+  catch (error: unknown) {
+    if (axios.isAxiosError<ApiResponse>(error)) {
+      console.log(error.response?.data?.message || "Erro ao buscar sistema de pagamento");
+    }
+    throw new Error("Erro ao buscar sistema de pagamento");
+  }
+}
+
+export async function excluirConciliacao(numNf: number): Promise<string> {
+  try {
+    const response = await api.delete<string>(`/Conciliacao/RemoverConciliacaoPorNota/${numNf}`);
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError<ApiResponse>(error)) {
+      console.log(error.response?.data?.message || "Erro ao excluir conciliação");
+    }
+    throw new Error("Erro ao excluir conciliação");
+  }
+}
+
 
 export async function removerPagamento(id: number): Promise<string> {
   try {

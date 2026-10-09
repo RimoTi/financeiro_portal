@@ -45,6 +45,7 @@ export const ModalGetNota: React.FC<Props> = ({
             const mensagem =
                 error?.response?.data ||
                 error?.response?.data?.message ||
+                error?.message ||
                 "Erro ao processar"
 
             toast.error(mensagem)

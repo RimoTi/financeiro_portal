@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "@components/spinner";
 import { mapCsvToDto, TestarAutorizacaoExistente } from "../consciliacaoService";
-import { Pagamento } from "../types";
+import { Pagamento, IValidarAutorExistente } from "../types";
 import { CTooltip } from "@coreui/react";
 
 type CsvRow = Record<string, string>;
@@ -66,13 +66,21 @@ export const ImportCsvVendas: React.FC = () => {
     const dados = mapCsvToDto(false, data);
     const pagamentos = removerDuplicadas(dados);
     //enviar para o backend para verificar quais já existem e quais não existem
-    const aut: string[] = pagamentos.map(p => p.numAutorizacao);
+    const aut: IValidarAutorExistente[] = pagamentos.map(p => ({ numAutorizacao: p.numAutorizacao, idVenda: p.idVenda }));
     try {
       const response = await TestarAutorizacaoExistente(aut);
-      const autorizacoesSemVinculo = response;
-      const pagamentosFiltrados = pagamentos.filter(p => autorizacoesSemVinculo.includes(p.numAutorizacao));
+      const autorizacoesSemVinculo: IValidarAutorExistente[] = response || [];
+
+      // Deixa na lista principal apenas os que TAMBÉM estão em autorizacoesSemVinculo
+      const pagamentosFiltrados = pagamentos.filter(p => {
+        return autorizacoesSemVinculo.some(a => 
+          String(a.numAutorizacao).trim() === String(p.numAutorizacao).trim() && 
+          String(a.idVenda).trim() === String(p.idVenda).trim()
+        );
+      });
+
       if (pagamentosFiltrados.length === 0) {
-        toast.info("Todos os registros do CSV já estão vinculados.");
+        toast.info("Nenhum registro válido ou compatível encontrado.");
         return;
       }
       navigate("/consciliacao/semVinculo", {
